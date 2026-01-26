@@ -14,12 +14,12 @@ This project is a professional personal project / end-of-year project entitled:
 
 ---
 
-## 👩 Students Involved
+##  Students Involved
 - Ben Amor Hanine  
 - Cheriaa Nermine  
 - Bhar Amira  
 
-## 👩 Supervisor
+##  Supervisor
 - Mme Mliki Hazar  
 
 ---
