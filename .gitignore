@@ -1,0 +1,5 @@
+# Virtual environment
+shorts-venv/
+venv/
+.venv/
+env/
