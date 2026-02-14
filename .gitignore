@@ -3,3 +3,18 @@ shorts-venv/
 venv/
 .venv/
 env/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.dvi
+*.synctex
+*.synctex.gz
+*.maf
+*.mtc
+*.mtc*
+texput.log

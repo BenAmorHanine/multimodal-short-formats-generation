@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Report (lualatex)",
+      "type": "shell",
+      "command": "lualatex",
+      "args": [
+        "--halt-on-error",
+        "--interaction=nonstopmode",
+        "--synctex=1",
+        "Report.tex"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

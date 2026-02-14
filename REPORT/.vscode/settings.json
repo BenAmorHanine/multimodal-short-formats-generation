@@ -1,0 +1,26 @@
+{
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.outDir": "%DIR%",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "lualatex_pdf",
+      "command": "lualatex",
+      "args": [
+        "--interaction=nonstopmode",
+        "--halt-on-error",
+        "--file-line-error",
+        "--synctex=1",
+        "%DOC%"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "lualatex (pdf)",
+      "tools": [
+        "lualatex_pdf"
+      ]
+    }
+  ],
+  "latex-workshop.view.pdf.viewer": "tab"
+}
