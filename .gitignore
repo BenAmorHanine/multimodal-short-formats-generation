@@ -4,6 +4,15 @@ venv/
 .venv/
 env/
 
+#Buckup folder
+backup/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+
 # LaTeX build artifacts
 *.aux
 *.log
@@ -18,3 +27,9 @@ env/
 *.mtc
 *.mtc*
 texput.log
+
+# Model weights
+models/
+*.pt
+*.bin
+*.safetensors
