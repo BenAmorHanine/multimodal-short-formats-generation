@@ -33,3 +33,6 @@ models/
 *.pt
 *.bin
 *.safetensors
+
+#RESULTS
+results/
