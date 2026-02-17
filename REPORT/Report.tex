@@ -183,24 +183,130 @@ azerty
 Joint multimodal representation learning addresses a fundamental limitation shared by both unimodal and fusion-based approaches: the absence of a unified semantic space in which modalities such as vision, audio, and text can be collectively  treated and compared. 
 Rather than processing each signal independently and combining outputs,the joint approach  trains a single model to map all modalities into a shared high-dimensional embedding space, where geometric proximity reflects semantic similarity regardless of the originating modality.
 \\Modern multimodal systems are inspired by the contrastive learning framework popularized by CLIP-like architectures, enabling cross-modal reasoning where heterogeneous modalities are treated as different expressions of the same underlying objective.
+Joint multimodal representation learning addresses...
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.55\textwidth]{images/unimodal_vs_multimodal.png}
+    \caption{Comparison of unimodal and multimodal processing frameworks.
+             Unimodal systems process a single data type, while multimodal
+             systems integrate multiple modalities into a unified representation
+             \citep{aiplanet2024multimodal}.}
+    \label{fig:unimodal_vs_multimodal}
+\end{figure}
+\subsection{Architectural Overview}
+\label{subsec:architecture}
+
+Although joint multimodal models vary in design, most share a common three-stage
+architecture: modality-specific encoders, a fusion mechanism, and optionally a
+decoder for generative tasks \cite{encord2024multimodal}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.60\textwidth]{images/multimodal_arch.png}
+    \caption{Joint multimodal model Architecture }
+             \cite{encord2024multimodal}
+    \label{fig:multimodal_architecture}
+\end{figure}
+
+
+Modality-specific encoders transform raw inputs into dense feature vectors: image
+encoders employ \textbf{CNNs} or \textbf{Vision Transformers (ViT)}, text encoders leverage \textbf{transformer architectures} to map token sequences into contextual embeddings, and audio encoders
+such as Wav2Vec2 \citep{baevski2020wav2vec20frameworkselfsupervised} convert raw waveforms into representations capturing rhythm, tone,
+and semantic content. Once encoded, a fusion mechanism integrates these embeddings
+into a unified representation. Four strategies are commonly used: \textit{early
+fusion} combines raw features before processing; \textit{intermediate fusion} merges
+latent representations; \textit{late fusion} combines final modality outputs; and
+\textit{hybrid fusion} applies elements of all three at different stages. These
+strategies are implemented through attention-based methods \cite{vaswani2017attention},
+feature concatenation, or dot-product interactions between modality vectors.
 
 \subsection{Contrastive Learning Framework}
+Contrastive learning is the fundamental training strategy underlying modern multimodal models. Rather than predicting explicit class labels, the model learns by comparing pairs of inputs: a \textbf{positive pair} consists of semantically aligned samples from different modalities --- an image and its corresponding caption, or a video frame and its paired audio segment --- while a \textbf{negative pair} consists of mismatched samples.
+The model is trained to pull positive pairs closer together in the embedding space while pushing negative pairs apart, with the supervision signal arising entirely from cross-modal correspondence rather than manual annotation.
+
+This is formalized through the InfoNCE objective \citep{oord2019representationlearningcontrastivepredictive}. Given a batch of $N$ matched pairs $(x_i^{(A)}, x_i^{(B)})$ from two modalities $A$ and $B$, each encoder maps its input to a \textbf{normalized} embedding such that the correct match is identifiable among all $N$ candidates. The symmetric loss is:
+
+\begin{equation}
+    \mathcal{L} = -\frac{1}{2N} \sum_{i=1}^{N} \left[
+    \log \frac{e^{\text{sim}(\mathbf{e}_i^A,\, \mathbf{e}_i^B)/\tau}}
+              {\sum_{j} e^{\text{sim}(\mathbf{e}_i^A,\, \mathbf{e}_j^B)/\tau}}
+    + \log \frac{e^{\text{sim}(\mathbf{e}_i^B,\, \mathbf{e}_i^A)/\tau}}
+              {\sum_{j} e^{\text{sim}(\mathbf{e}_i^B,\, \mathbf{e}_j^A)/\tau}}
+    \right]
+\label{eq:infonce}
+\end{equation}
+where $\text{sim}(\cdot,\cdot)$ is cosine similarity and $\tau$ is a temperature hyperparameter controlling the sharpness of the similarity distribution. A lower $\tau$ sharpens the objective, producing a more discriminative but noise-sensitive
+embedding space; in practice, $\tau$ is either fixed --- CLIP uses $\tau = 0.07$ \citep{radford2021cliplearningtransferablevisualmodels} --- or learned per modality, as in ImageBind \citep{girdhar2023imagebindembeddingspacebind}. This framework has proven highly scalable, enabling multimodal pretraining on large-scale web data without any manually labelled supervision.
 
 \subsection{Shared Embedding Spaces}
+\label{subsec:shared_embedding}
+
+The product of contrastive training is a shared embedding space, typically of dimension $d \in \{512, 768, 1024\}$, in which each modality is processed by a dedicated encoder  --- a transformer-based language encoder for text, a vision transformer for images, or a spectrogram-based encoder for audio \citep{encord2024multimodal} --- 
+followed by a projection layer that maps the resulting features into the same latent dimensionality. All embeddings are constrained to lie on the unit hypersphere $\mathbb{S}^{d-1}$ via \textbf{$\ell_2$ normalization}, making cosine similarity a universal proximity measure across modalities:
+
+\begin{equation}
+    \text{sim}(\mathbf{e}^A, \mathbf{e}^B)
+    = \mathbf{e}^A \cdot \mathbf{e}^B
+    \qquad \text{since } \|\mathbf{e}\| = 1
+\label{eq:cosine}
+\end{equation}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.70\textwidth]{images/stateoftheart_multi_embeddingss.png}
+    \caption{Multimodal embeddings: raw inputs from different modalitiesprojected into a common high-dimensional vector space \cite{encord2024multimodal}.}
+    \label{fig:embeddings}
+\end{figure} %maybe nfskh hethy enabling direct cross-modal comparison via cosine similarity ml caption
+
+Within this shared space, semantically related inputs are positioned close to one another regardless of modality: an image of a cheering crowd, an audio clip of applause, and a textual description of excitement occupy nearby regions of the embedding manifold. This unified representation facilitates cross-modal similarity computation and retrieval without requiring explicit modality-specific fusion mechanisms. 
+
+A further property is \textit{emergent transitivity}: a model trained on image-audio and image-text pairs separately achieves implicit audio-text alignment through the shared visual anchor, without the two modalities ever being trained together directly. 
+\\ImageBind \citep{girdhar2023imagebindembeddingspacebind} exploits this property to bind six modalities --- image, text, audio, depth, thermal, and IMU --- using only image-paired data for each, achieving full cross-modal alignment across all modality combinations at inference time.
+%maybe  nahih star hetha
 
 \subsection{Zero-Shot Transfer and Cross-Modal Retrieval}
+\label{subsec:zeroshot}
+The shared embedding space directly enables zero-shot transfer: the ability to perform recognition or scoring on novel concepts expressed as natural language, without any task-specific training.  Because the model learns semantic alignment rather than task-specific boundaries, it can transfer to unseen categories without fine-tuning. A concept such as ``crowd applause'' is encoded by the text encoder into a semantic anchor embedding; candidate segments are then scored by their cosine similarity to this anchor, regardless of modality:
+\begin{equation}
+    \text{score}(x) = \text{sim}\!\left(f_{\text{text}}(q),\; f_{\text{target}}(x)\right)
+\label{eq:zeroshot}
+\end{equation}
+The shared space enables cross-modal retrieval: a natural language query can retrieve the most semantically relevant video segment purely on embedding proximity, while an audio clip of crowd cheering can retrieve the visual moment of a goal.
+\\This ``search by anything'' capability supports text-to-image, image-to-text, audio-to-text, and audio-to-video retrieval within a single framework.
 
-\subsection{Advantages of Joint Multimodal Learning}
+%\subsection{Advantages of Joint Multimodal Learning}
+%\subsection{Limitations and Challenges}
+\subsection{Advantages and Limitations  of Joint Multimodal Learning}
 
-\subsection{Limitations and Challenges}
+\label{subsec:jml_advantages_limitations}
 
+Joint multimodal learning paradigm offers four key advantages over alternative approaches.It provides \textbf{native cross-modal alignment}, to encode semantic correspondences directly in the geometry of the embedding space rather than through engineered fusion rules.
+It enables \textbf{zero-shot generalization}, allowing the system to handle new content categories at inference time through natural language, without depending on annotated datasets.
+It supports \textbf{modality-agnostic scoring}, where a single similarity function operates uniformly across all available modalities.
 
+Finally, models (such as ImageBind) benefit from \textbf{large-scale pretraining} on internet-scale paired data, encoding world knowledge that transfers effectively to downstream tasks without fine-tuning.
+
+Despite these strengths, the paradigm presents notable limitations.
+The most significant is the \textbf{absence of temporal modeling}: joint multimodal models produce a single embedding per fixed-length segment and cannot model sequential dynamics across segments.
+Narrative structures, such as the comedic buildup across several exchanges before a punchline, must be handled by external temporal analysis.
+A second limitation is \textbf{embedding norm uniformity}: because all embeddings are $\ell_2$-normalized, their magnitude carries no information, making raw energy-based scoring inapplicable without additional statistical processing.
+Finally, \textbf{modality imbalance} in pretraining data: image-text pairs, being far more abundant than audio-centric combinations, can reduce the discriminative power of audio embeddings in content where acoustic cues are the primary signal.
+
+%These limitations notwithstanding, joint multimodal representation learning remains the most principled paradigm for zero-shot highlight detection, and forms the conceptual basis for the models reviewed in the following section.
+Addressing these challenges remains an active area of research, particularly for video-centric applications where temporal coherence and multimodal interaction play a central role.
 
 \section{Representative Multimodal Models}
 %https://encord.com/blog/top-multimodal-models/
 
 \subsection{CLIP}%amira
-\subsection{AudioCLIP or CLAP}   % hanine
+\subsection{CLAP}
+\label{subsec:clap}
+
+Contrastive Language-Audio Pretraining (CLAP), as described in \citep{elizalde2022claplearningaudioconcepts}, is an extension of the contrastive learning paradigm of CLIP to the audio domain, with the aim of learning a joint representation space between audio and text to facilitate zero-shot audio classification and retrieval tasks. The architecture employs two encoders to process the audio and text modalities in the form of mel spectrogram and text, respectively, and is trained using symmetric contrastive loss to maximize the similarity between matching and minimize the similarity between non-matching audio and text pairs.
+
+Despite its success in aligning the audio and text modalities, the limitations of the CLAP approach for the task of highlight detection in videos are as follows: the audio is processed in isolation without access to the visual information, thus making it impossible to leverage the audio-visual modalities. In addition, the encoders are optimized for short videos, thus limiting the modeling of long-range dependencies, which is critical in the case of videos. The use of architectures such as ImageBind, which combines the three modalities in a single representation space, can be more effective for multimodal video analysis.
+
 \subsection{Flamingo }%nermine
 The Flamingo model developed by DeepMind is a powerful family of Visual Language Models designed to process sequences of images or videos
 interleaved with text and generate free-form text as output. \\
@@ -219,17 +325,29 @@ The architecture of LLaVA  consists of a \textbf{pretrained CLIP  vision encoder
 This MLP projector converts visual encoder tokens into post-embedding layer LLM tokens, replacing the simpler linear projection used in earlier versions to improve multimodal capabilities .\\
 The training process follows a \textbf{two-stage pipeline:} an initial stage focused on modality alignment using roughly 600,000 image-text pairs, followed by a second stage of visual instruction fine-tuning where the model is trained on diverse conversation datasets .\\
 This approach enables LLaVA to perform tasks such as image description, visual question answering, and multimodal dialogue generation. Compared to more complex architectures, LLaVA is considered more accessible and computationally efficient while maintaining competitive performance.
-\subsection{Video-LLaMA} % hanine
+
+\subsection{Video-LLaMA}
+\label{subsec:videollama}
+Video-LLaMA \citep{zhang2023videollama} is a video understanding model that uses the generative method of incorporating video content into large language models. Unlike embedding-based video retrieval models that treat text, vision, and audio as equivalent modalities in an embedding space, Video-LLaMA places the language model at the core of the model and treats vision and audio as conditionals for text generation. The model is instruction-tuned to process video content with synchronized audio for natural language reasoning on dynamic video content.
+
+The model employs two branches: the Vision-Language branch that aggregates video features using Video Q-Former to extract temporal dependencies across frames using cross-frame attention mechanisms, and the Audio-Language branch that processes audio content using ImageBind \citep{girdhar2023imagebindembeddingspacebind} to extract features that can be used in conjunction with the language model. 
+\\Although Video-LLaMA is effective in processing temporal video content for scene understanding and question answering tasks, its autoregressive generation method is not appropriate for embedding-based video retrieval tasks.
+ 
+However, the training of video language models like Video-LLaMA is computationally expensive and demands large-scale video-text paired datasets, which limits its adoption by many research groups. 
+
+
+VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA that uses a spatial-temporal convolution connector instead of the dual branches of the original model to link the vision and audio models to the language model and improves audio content processing using BEATs \citep{chen2022beatsaudiopretrainingacoustic}.
 \subsection{ImageBind}%amira   
 % Last = most important
 \section{Comparative Analysis and Discussion} %hanine
-% Table comparing all models across key criteria
+
+%comparison of the approaches
+% + Table comparing all models across key criteria
 % Quantitative where possible (params, modalities, zero-shot, etc.)
 
 \section{Positioning of the Proposed Approach}% hanine
 % Justification of selected paradigm
 % Justification of selected model family
-
 %+ Bridge to Chapter 2 (Methodology)
 
 
@@ -245,7 +363,10 @@ This approach enables LLaVA to perform tasks such as image description, visual q
 Insert your appendixes here if you need.
 \end{appendix}
 
+
+\section*{References}
 %\spacing{1}
-\bibliographystyle{unsrt}
+\bibliographystyle{plainnat}
 \bibliography{references}
+
 \end{document}
