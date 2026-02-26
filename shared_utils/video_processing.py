@@ -108,3 +108,21 @@ def get_video_info(video_path):
         'fps': fps,
         'duration': float(stream.get('duration', 0))
     }
+
+def save_video_segment(video_path: str, start_time: float, 
+                       end_time: float, output_path: str) -> None:
+    """
+    Save a single video segment as .mp4.
+    Thin wrapper around ffmpeg stream copy — used by EmbeddingEngine.
+    """
+    duration = end_time - start_time
+    cmd = [
+        'ffmpeg', '-y',
+        '-ss', str(start_time),
+        '-i', video_path,
+        '-t', str(duration),
+        '-c', 'copy',
+        '-avoid_negative_ts', '1',
+        output_path
+    ]
+    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

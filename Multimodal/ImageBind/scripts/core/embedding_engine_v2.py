@@ -6,14 +6,16 @@ import torch
 import numpy as np
 import tempfile
 import os
+from PIL import Image
+import soundfile as sf
 from tqdm import tqdm
 
 from imagebind import data
 from imagebind.models.imagebind_model import ModalityType
 
 # Import from shared utils
-from shared_utils.video_processing import segment_video, save_video_segment
-#from shared_utils.audio_processing import extract_audio_segment
+from shared_utils.video_processing import segment_video, extract_frames
+from shared_utils.audio_processing import extract_audio_segment
 from shared_utils.text_processing import (
     extract_transcript_with_timestamps,
     align_text_to_segments
@@ -43,39 +45,95 @@ class EmbeddingEngine:
         self.device = device
         self.whisper_model = whisper_model
     
-    def extract_segment_features(self, video_path, start_time, end_time,
-                                 segment_text):
-
+    def extract_segment_features(self, vr, video_path, start_time, end_time, 
+                                fps, segment_text, num_frames=8):
+        """
+        Extract trimodal features for a single segment.
+        
+        Args:
+            vr: VideoReader object
+            video_path: Path to video
+            start_time: Segment start (seconds)
+            end_time: Segment end (seconds)
+            fps: Video FPS
+            segment_text: Aligned transcript text
+            num_frames: Number of frames to sample
+        
+        Returns:
+            dict: {
+                'vision': (1, 1024) numpy array,
+                'audio': (1, 1024) numpy array,
+                'text': (1, 1024) numpy array,
+                'combined': (1, 1024) numpy array,
+                'start': float,
+                'end': float
+            }
+        """
+        # Extract frames
+        frames = extract_frames(vr, start_time, end_time, fps, num_frames)
+        
         with tempfile.TemporaryDirectory() as tmpdir:
+            # Save all frames
+            frame_paths = []
+            for i, frame in enumerate(frames):
+                frame_path = os.path.join(tmpdir, f"frame_{i}.jpg")
+                Image.fromarray(frame).save(frame_path)
+                frame_paths.append(frame_path)
+            
+            # Extract and save audio
+            audio = extract_audio_segment(video_path, start_time, end_time)
+            audio_path = os.path.join(tmpdir, "audio.wav")
+            sf.write(audio_path, audio, 16000)
+            
+            # === VISION EMBEDDING ===
+            # === VISION EMBEDDING (8-frame clip) ===
 
-            # === SAVE 2-SEC SEGMENT AS .mp4 ===
-            segment_path = os.path.join(tmpdir, "segment.mp4")
-            save_video_segment(video_path, start_time, end_time, segment_path)
+            # Convert frames to tensor
+            frames_tensor = torch.stack([
+                data.transforms.vision_transform(Image.fromarray(f))
+                for f in frames
+            ])  # (T, 3, 224, 224)
 
+            # Rearrange to (1, 3, T, 224, 224)
+            frames_tensor = frames_tensor.permute(1, 0, 2, 3).unsqueeze(0).to(self.device)
+
+            inputs = {
+                ModalityType.VISION: frames_tensor
+            }
+
+            with torch.no_grad():
+                vision_emb = self.model(inputs)[ModalityType.VISION].cpu().numpy()
+
+    
+            with torch.no_grad():
+                embeddings = self.model(inputs)
+                vision_emb = embeddings[ModalityType.VISION].cpu().numpy()
+            """ 
+            #SOLUTION: Average all frame embeddings for better representation
+            frame_embeddings = []
+            for frame_path in frame_paths:
+                inputs = {
+                    ModalityType.VISION: data.load_and_transform_vision_data(
+                        [frame_path], self.device
+                    )
+                }
+                with torch.no_grad():
+                    emb = self.model(inputs)[ModalityType.VISION]
+                    frame_embeddings.append(emb.cpu())
+            
+            # Average all frame embeddings
+            vision_emb = torch.stack(frame_embeddings).mean(dim=0).numpy()
+            """
             # === AUDIO EMBEDDING ===
-            # Same .mp4 file — load_and_transform_audio_data ignores video track
             inputs = {
                 ModalityType.AUDIO: data.load_and_transform_audio_data(
-                    [segment_path], self.device
+                    [audio_path], self.device
                 )
             }
             with torch.no_grad():
                 audio_emb = self.model(inputs)[ModalityType.AUDIO].cpu().numpy()
-
-            # === VISION EMBEDDING ===
-            # load_and_transform_video_data: clips_per_video=1 (already 2sec),
-            # decode_audio=False internally — audio track ignored automatically
-            inputs = {
-                ModalityType.VISION: data.load_and_transform_video_data(
-                    [segment_path], self.device,
-                    clip_duration=2,
-                    clips_per_video=1,   # segment is already the right duration
-                )
-            }
-            with torch.no_grad():
-                vision_emb = self.model(inputs)[ModalityType.VISION].cpu().numpy()
-
-            # === TEXT EMBEDDING === 
+            
+            # === TEXT EMBEDDING ===
             if segment_text:
                 inputs = {
                     ModalityType.TEXT: data.load_and_transform_text(
@@ -85,11 +143,12 @@ class EmbeddingEngine:
                 with torch.no_grad():
                     text_emb = self.model(inputs)[ModalityType.TEXT].cpu().numpy()
             else:
-                text_emb = np.zeros((1, 1024), dtype=np.float32)
-
-            # === COMBINED ===
+                # Zero embedding if no text
+                text_emb = np.zeros_like(vision_emb)
+            
+            # === COMBINED EMBEDDING (Mean) ===
             combined_emb = (vision_emb + audio_emb + text_emb) / 3
-
+        
         return {
             'vision': vision_emb,
             'audio': audio_emb,
@@ -98,8 +157,9 @@ class EmbeddingEngine:
             'start': start_time,
             'end': end_time
         }
+    
     def extract_video_features(self, video_path, window_size=2, stride=1, 
-                            verbose=True):
+                              num_frames=8, verbose=True):
         """
         Complete pipeline: Extract trimodal features from entire video.
         
@@ -134,8 +194,8 @@ class EmbeddingEngine:
         if verbose:
             print(f"\nStep 2: Segmenting video (window={window_size}s, stride={stride}s)...")
         
-        segments, _, _ = segment_video(video_path, window_size, stride)
-
+        segments, fps, vr = segment_video(video_path, window_size, stride)
+        
         if verbose:
             print(f"✓ Created {len(segments)} segments")
         
@@ -163,8 +223,8 @@ class EmbeddingEngine:
         for idx, (start, end) in iterator:
             try:
                 seg_data = self.extract_segment_features(
-                    video_path, start, end,
-                    segment_texts[idx]
+                    vr, video_path, start, end, fps,
+                    segment_texts[idx], num_frames
                 )
                 
                 results.append({
