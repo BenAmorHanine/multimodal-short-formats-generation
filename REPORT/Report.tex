@@ -155,23 +155,92 @@ azerty
 %models available and their key concepts
 %souel: el relevance of the 3 modalitites comment nahkiw aliha?
  % unnumbered - just contextual paragraph %hanine
- \section*{Introduction}
+  \section*{Introduction}
 \section{Unimodal Approaches for Video Understanding}%amira
 % Conceptual section: what is unimodal, why it's limited
+Video understanding has traditionally been approached through unimodal analysis, where only a single modality—visual, audio, or text—is processed independently. While such approaches can extract meaningful information, they often fail to capture the full semantic and emotional richness of long-form videos.
 
+For highlight detection and segmentation tasks, relying on a single modality may lead to incomplete or misleading interpretations of what constitutes a high-impact segment.
 \subsection{Visual Understanding}
 % Frame-level analysis, optical flow, scene detection
+Visual-based methods focus on analyzing video frames to extract spatial and temporal patterns. Early systems relied on handcrafted features, while modern approaches use deep convolutional neural networks to learn visual representations automatically.
 
+Typical visual analysis techniques include:
+
+- Frame-level feature extraction
+
+- Optical flow for motion estimation
+
+- Shot boundary detection
+
+- Scene classification
+
+- Object and action recognition
+
+Libraries such as OpenCV and Decord are widely used for frame extraction and temporal sampling in video processing pipelines.
+
+However, visual saliency does not necessarily correspond to semantic importance. A visually dynamic segment may lack narrative relevance, while a static scene containing crucial speech content may represent a key moment. Therefore, visual-only segmentation is insufficient for detecting meaningful high-impact clips.
 \subsection{Audio Understanding}
-% Acoustic features, spectral analysis, speech processing
+Audio-based approaches analyze the acoustic signal to detect speech, music, sound events, and emotional cues. These systems typically rely on spectral and temporal representations of sound.
 
+Common techniques include:
+
+- Mel-Frequency Cepstral Coefficients (MFCCs)
+
+- Spectrogram analysis
+
+- Energy-based segmentation
+
+- Pitch and prosodic feature extraction
+
+- Speaker diarization
+
+The Python library Librosa is commonly used for extracting spectral and rhythmic features such as MFCCs, chroma features, spectral centroid, and tempo descriptors.
+
+Although audio intensity can signal emotionally charged moments, it may also produce false positives due to background music or noise. Furthermore, impactful segments may not always correspond to peaks in acoustic energy. Hence, audio-only systems lack contextual grounding.
 \subsection{Textual Understanding}
-% NLP for transcripts, sentiment, keyword extraction
+Text-based video understanding relies on Automatic Speech Recognition (ASR) to convert spoken content into transcripts, enabling Natural Language Processing (NLP) analysis.
 
+Modern ASR models such as Whisper provide robust transcription for long-form and multilingual audio content.
+
+Once transcribed, NLP techniques can be applied for:
+
+- Keyword extraction
+
+- Topic segmentation
+
+- Sentiment analysis
+
+- Emotion detection
+
+- Semantic similarity analysis
+
+Textual analysis enables identification of semantically important moments in videos. However, it ignores visual expressiveness, cinematic effects, and acoustic intensity, which are often crucial in determining whether a segment is engaging or impactful.
 \section{Representative Unimodal Models and Frameworks}
-\subsection{Whisper}     % ASR- you use this
-\subsection{Librosa}     % Audio features - you use this
-\subsection{OpenCV / Decord}  % Video frame extraction - you use this
+\subsection{Whisper}     % ASR- we use this
+\subsection{Librosa}     % Audio features - we use this
+\subsection{OpenCV / Decord}  % Video frame extraction - we use this
+
+\section{Limitations of Unimodal Approaches for Highlight detection}
+For the task of segmenting long videos into short, high-impact reels, unimodal systems face significant limitations:
+
+- Visual systems detect motion but not meaning.
+
+- Audio systems detect intensity but not narrative relevance.
+
+- Text systems detect semantics but not emotional amplification.
+
+High-impact segments typically emerge from the interaction between modalities—for example:
+
+- A powerful statement (text) delivered with emotional tone (audio)
+
+- A dramatic visual scene reinforced by intense background music
+
+- A key announcement accompanied by audience reactions
+
+Therefore, unimodal analysis fails to model cross-modal dependencies that define impactful video moments.
+
+
 
 \section{Fusion-Based Multimodal Systems}
 % Conceptual section: early/late/hybrid fusion
