@@ -408,10 +408,10 @@ However, the training of video language models like Video-LLaMA is computational
 VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA that uses a spatial-temporal convolution connector instead of the dual branches of the original model to link the vision and audio models to the language model and improves audio content processing using BEATs \citep{chen2022beatsaudiopretrainingacoustic}.
 \subsection{ImageBind}%amira   
 % Last = most important
-\section{Comparative Analysis and Discussion} %hanine
+\section{Comparative Analysis and Discussion} %nermine
 
-%comparison of the approaches
-% + Table comparing all models across key criteria
+%comparison of the approaches pros and cons
+% + Table comparing all models across key criteria ( inspire from the one in the paper of encord)
 % Quantitative where possible (params, modalities, zero-shot, etc.)
 
 \section{Positioning of the Proposed Approach}% hanine
@@ -421,7 +421,33 @@ VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA t
 
 
 
-\section*{Conclusion}
+\section*{Conclusion}%to be done
+
+\chapter{Design and Implementation}
+\section*{Introduction}
+\section{Implementation Overview}%later
+
+\section{Preprocessing Pipeline}%hanine
+%for  Audio Extraction and Alignment CODE NEEDS TO BE REVIEWED!!!!!!!!!!!
+    %for Modality Synchronization CODE NEEDS TO BE REVIEWED!!!!!!!!!!!
+%WHY REVISE ? KHTR KOL MARA ON EXTRAIT TEXT O NAAMLOU ALIGNMENT (SEGMENTATION DU TEXT) NALKAW HAJET SOIT BARSHA FERGHIN SOIT  L AKS O DEJA LE FAIT QUE NALKAW HAJET LOKHTALFA FAMA PROBLEME
+%DONC ON REVISE EL MODEL /PROCESS MTEA TEXT EXTRACTION BELK HOUWA FIH MOSHKL O MBAAD LALIGNEMENT ENTRE LES SEGMETNS= DIVISION DU TEXT SUR LES SEGMENTS 2 SECONDES
+
+
+\subsection{Video Segmentation} %nermine
+\subsection{Frame Extraction}%nermine
+\subsection{Audio Extraction}%nermine
+\subsection{Text Extraction via Speech Recognition}%nermine
+
+\subsection{Modality Synchronization and Alignment}%hanine
+
+
+\section{ImageBind Integration}%hanine and amira
+\section{Missing Modality Handling: Text Imagination}% amira and hanine
+\section{Highlight Scoring and Selection}%will be fixed when done
+%and Temporal Modeling
+\section{Evaluation Metrics and Validation Protocol} %will be fixed when done
+
 
 \chapter*{Conclusion and perspectives}
 \addcontentsline{toc}{chapter}{Conclusion and perspectives}
