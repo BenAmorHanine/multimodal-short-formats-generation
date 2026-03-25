@@ -159,11 +159,13 @@ Video understanding is an inherently multimodal problem. A highlight is rarely d
 This chapter traces the progression from unimodal approaches and their limitations, through fusion-based systems, to joint multimodal representation learning — the paradigm this work builds upon. Each step in this progression is motivated by the shortcomings of the one preceding it, converging on the architectural foundation of the proposed approach.
 
 \section{Unimodal Approaches for Video Understanding}%amira
+\label{sec:unimodal_approach}
 % Conceptual section: what is unimodal, why it's limited
 Video understanding has traditionally been approached through unimodal analysis, where only a single modality—visual, audio, or text—is processed independently. While such approaches can extract meaningful information, they often fail to capture the full semantic and emotional richness of long-form videos.
 
 For highlight detection and segmentation tasks, relying on a single modality may lead to incomplete or misleading interpretations of what constitutes a high-impact segment.
 \subsection{Visual Understanding}
+\label{subsec:visual}
 % Frame-level analysis, optical flow, scene detection
 Visual-based methods focus on analyzing video frames to extract spatial and temporal patterns. Early systems relied on handcrafted features, while modern approaches use deep convolutional neural networks to learn visual representations automatically.
 
@@ -180,9 +182,10 @@ Typical visual analysis techniques include:
 - Object and action recognition
 
 Libraries such as OpenCV and Decord are widely used for frame extraction and temporal sampling in video processing pipelines.
-
 However, visual saliency does not necessarily correspond to semantic importance. A visually dynamic segment may lack narrative relevance, while a static scene containing crucial speech content may represent a key moment. Therefore, visual-only segmentation is insufficient for detecting meaningful high-impact clips.
+
 \subsection{Audio Understanding}
+\label{subsec:audio}
 Audio-based approaches analyze the acoustic signal to detect speech, music, sound events, and emotional cues. These systems typically rely on spectral and temporal representations of sound.
 
 Common techniques include:
@@ -200,7 +203,9 @@ Common techniques include:
 The Python library Librosa is commonly used for extracting spectral and rhythmic features such as MFCCs, chroma features, spectral centroid, and tempo descriptors.
 
 Although audio intensity can signal emotionally charged moments, it may also produce false positives due to background music or noise. Furthermore, impactful segments may not always correspond to peaks in acoustic energy. Hence, audio-only systems lack contextual grounding.
+
 \subsection{Textual Understanding}
+\label{subsec:textual}
 Text-based video understanding relies on Automatic Speech Recognition (ASR) to convert spoken content into transcripts, enabling Natural Language Processing (NLP) analysis.
 
 Modern ASR models such as Whisper provide robust transcription for long-form and multilingual audio content.
@@ -219,11 +224,19 @@ Once transcribed, NLP techniques can be applied for:
 
 Textual analysis enables identification of semantically important moments in videos. However, it ignores visual expressiveness, cinematic effects, and acoustic intensity, which are often crucial in determining whether a segment is engaging or impactful.
 \section{Representative Unimodal Models and Frameworks}
+\label{sec:unimodal_models_frameworks}
+
 \subsection{Whisper}     % ASR- we use this
+\label{subsec:whisper}
+
 \subsection{Librosa}     % Audio features - we use this
+\label{subsec:librosa}
+
 \subsection{OpenCV / Decord}  % Video frame extraction - we use this
+\label{subsec:opencvg/decord}
 
 \section{Limitations of Unimodal Approaches for Highlight detection}
+\label{sec:unimodal_limitations}
 For the task of segmenting long videos into short, high-impact reels, unimodal systems face significant limitations:
 
 - Visual systems detect motion but not meaning.
@@ -245,16 +258,18 @@ Therefore, unimodal analysis fails to model cross-modal dependencies that define
 
 
 \section{Fusion-Based Multimodal Systems}
+\label{sec:fusion_based_systems}
 % Conceptual section: early/late/hybrid fusion
 % Limitations of fusion without joint training
 
 \section{Joint Multimodal Representation Learning}%hanine
+\label{sec:joint_representation}
 % Conceptual section: contrastive learning, shared embedding spaces
 % CLIP paradigm, temperature scaling, zero-shot transfer
 Joint multimodal representation learning addresses a fundamental limitation shared by both unimodal and fusion-based approaches: the absence of a unified semantic space in which modalities such as vision, audio, and text can be collectively  treated and compared. 
-Rather than processing each signal independently and combining outputs,the joint approach  trains a single model to map all modalities into a shared high-dimensional embedding space, where geometric proximity reflects semantic similarity regardless of the originating modality.
+Rather than processing each signal independently and combining outputs,the joint approach  trains a single model to vimap all modalities into a shared high-dimensional embedding space, where geometric proximity reflects semantic similarity regardless of the originating modality.
 \\Modern multimodal systems are inspired by the contrastive learning framework popularized by CLIP-like architectures, enabling cross-modal reasoning where heterogeneous modalities are treated as different expressions of the same underlying objective.
-Joint multimodal representation learning addresses...
+Joint multimodal representation learning addresses the core challenge of cross-modal alignment, enabling direct comparison and retrieval across modalities without relying on engineered fusion rules or modality-specific supervision.
 
 \begin{figure}[h!]
     \centering
@@ -281,18 +296,13 @@ decoder for generative tasks \cite{encord2024multimodal}.
 \end{figure}
 
 
-Modality-specific encoders transform raw inputs into dense feature vectors: image
-encoders employ \textbf{CNNs} or \textbf{Vision Transformers (ViT)}, text encoders leverage \textbf{transformer architectures} to map token sequences into contextual embeddings, and audio encoders
-such as Wav2Vec2 \citep{baevski2020wav2vec20frameworkselfsupervised} convert raw waveforms into representations capturing rhythm, tone,
-and semantic content. Once encoded, a fusion mechanism integrates these embeddings
-into a unified representation. Four strategies are commonly used: \textit{early
-fusion} combines raw features before processing; \textit{intermediate fusion} merges
-latent representations; \textit{late fusion} combines final modality outputs; and
-\textit{hybrid fusion} applies elements of all three at different stages. These
-strategies are implemented through attention-based methods \cite{vaswani2017attention},
-feature concatenation, or dot-product interactions between modality vectors.
+Modality-specific encoders transform raw inputs into dense feature vectors: image encoders employ \textbf{CNNs} or \textbf{Vision Transformers (ViT)}, text encoders leverage \textbf{transformer architectures} to map token sequences into contextual embeddings, and audio encoders such as Wav2Vec2 \citep{baevski2020wav2vec20frameworkselfsupervised} convert raw waveforms into representations capturing rhythm, tone,
+and semantic content. Once encoded, a fusion mechanism integrates these embeddings into a unified representation. Four strategies are commonly used: 
+\textit{early fusion} combines raw features before processing; \textit{intermediate fusion} merges latent representations; \textit{late fusion} combines final modality outputs; and \textit{hybrid fusion} applies elements of all three at different stages. These
+strategies are implemented through attention-based methods \cite{vaswani2017attention}, feature concatenation, or dot-product interactions between modality vectors.
 
 \subsection{Contrastive Learning Framework}
+\label{subsec:contrastive_learning}
 Contrastive learning is the fundamental training strategy underlying modern multimodal models. Rather than predicting explicit class labels, the model learns by comparing pairs of inputs: a \textbf{positive pair} consists of semantically aligned samples from different modalities --- an image and its corresponding caption, or a video frame and its paired audio segment --- while a \textbf{negative pair} consists of mismatched samples.
 The model is trained to pull positive pairs closer together in the embedding space while pushing negative pairs apart, with the supervision signal arising entirely from cross-modal correspondence rather than manual annotation.
 
@@ -349,7 +359,6 @@ The shared space enables cross-modal retrieval: a natural language query can ret
 %\subsection{Advantages of Joint Multimodal Learning}
 %\subsection{Limitations and Challenges}
 \subsection{Advantages and Limitations  of Joint Multimodal Learning}
-
 \label{subsec:jml_advantages_limitations}
 
 Joint multimodal learning paradigm offers four key advantages over alternative approaches.It provides \textbf{native cross-modal alignment}, to encode semantic correspondences directly in the geometry of the embedding space rather than through engineered fusion rules.
@@ -368,18 +377,19 @@ Finally, \textbf{modality imbalance} in pretraining data: image-text pairs, bein
 Addressing these challenges remains an active area of research, particularly for video-centric applications where temporal coherence and multimodal interaction play a central role.
 
 \section{Representative Multimodal Models}
+\label{sec:multimodal_models}
 %https://encord.com/blog/top-multimodal-models/
 
 \subsection{CLIP}%amira
 \label{subsec:clip}
 \subsection{CLAP}
 \label{subsec:clap}
-
 Contrastive Language-Audio Pretraining (CLAP), as described in \citep{elizalde2022claplearningaudioconcepts}, is an extension of the contrastive learning paradigm of CLIP to the audio domain, with the aim of learning a joint representation space between audio and text to facilitate zero-shot audio classification and retrieval tasks. The architecture employs two encoders to process the audio and text modalities in the form of mel spectrogram and text, respectively, and is trained using symmetric contrastive loss to maximize the similarity between matching and minimize the similarity between non-matching audio and text pairs.
 
 Despite its success in aligning the audio and text modalities, the limitations of the CLAP approach for the task of highlight detection in videos are as follows: the audio is processed in isolation without access to the visual information, thus making it impossible to leverage the audio-visual modalities. In addition, the encoders are optimized for short videos, thus limiting the modeling of long-range dependencies, which is critical in the case of videos. The use of architectures such as ImageBind, which combines the three modalities in a single representation space, can be more effective for multimodal video analysis.
 
 \subsection{Flamingo }%nermine
+\label{subsec:flamingo}
 The Flamingo model developed by DeepMind is a powerful family of Visual Language Models designed to process sequences of images or videos
 interleaved with text and generate free-form text as output. \\
 Flamingo represents a notable progression in vision-language modeling by enabling a single model to perform multiple multimodal tasks with minimal task-specific fine-tuning.
@@ -391,6 +401,7 @@ Experimental evaluations showed strong performance across several vision–langu
 
 
 \subsection{LLAVA}%nermine
+\label{subsec:llava}
 LLaVA  is a multimodal model designed to enhance general-purpose visual and language understanding through the use of visual instruction tuning 
 
 The architecture of LLaVA  consists of a \textbf{pretrained CLIP  vision encoder }and a \textbf{Vicuna large language model}, which are connected by a two-layer \textbf{Multi-Layer Perceptron cross-modal projector} .\\
@@ -404,15 +415,14 @@ Video-LLaMA \citep{zhang2023videollama} is a video understanding model that uses
 
 The model employs two branches: the Vision-Language branch that aggregates video features using Video Q-Former to extract temporal dependencies across frames using cross-frame attention mechanisms, and the Audio-Language branch that processes audio content using ImageBind \citep{girdhar2023imagebindembeddingspacebind} to extract features that can be used in conjunction with the language model. 
 \\Although Video-LLaMA is effective in processing temporal video content for scene understanding and question answering tasks, its autoregressive generation method is not appropriate for embedding-based video retrieval tasks.
- 
 However, the training of video language models like Video-LLaMA is computationally expensive and demands large-scale video-text paired datasets, which limits its adoption by many research groups. 
-
 
 VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA that uses a spatial-temporal convolution connector instead of the dual branches of the original model to link the vision and audio models to the language model and improves audio content processing using BEATs \citep{chen2022beatsaudiopretrainingacoustic}.
 \subsection{ImageBind}%amira   
 \label{subsec:imagebind}
 % Last = most important
 \section{Comparative Analysis and Discussion} %nermine
+\label{sec:comparative_analysis}
 
 %comparison of the approaches pros and cons
 % + Table comparing all models across key criteria ( inspire from the one in the paper of encord)
@@ -420,6 +430,7 @@ VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA t
 
 
 \section{Positioning of the Proposed Approach}% hanine
+\label{sec:positioning}
 % Justification of selected paradigm
 % Justification of selected model family
 %+ Bridge to Chapter 2 (Methodology)
@@ -427,6 +438,7 @@ VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA t
 The trajectory surveyed in this chapter points to a single conclusion: meaningful cross-modal reasoning requires modalities to be aligned at training time, not combined. The approach adopted in this work follows directly from that constraint.
 
 \subsection{Paradigm Justification}
+\label{subsec:paradigm_justif}
 
 Unimodal approaches, while effective within their domain, fail to capture the semantic richness of video, which is inherently multimodal. 
 Fusion-based methods combine representations learned independently, which limits their ability to model deep cross-modal correspondences and to generalize to scenarios unseen during training.
@@ -439,17 +451,15 @@ This mechanism is precisely what underpins the scoring strategy adopted in our p
 \textbf{a segment is considered salient when it exhibits strong joint activity or a significant semantic shift across consecutive modalities}.
 
 \subsection{Model Justification}
-
+\label{subsec:model_justif}
 Among the joint embedding models surveyed, ImageBind \ref{subsec:imagebind} stands out as the most suitable choice for the problem at hand. CLIP \ref{subsec:clip} is 
 limited to the image-text pair and has no audio processing capability. CLAP \ref{subsec:clap} covers audio and text but disregards the visual modality. 
 Video-LLaMA \ref{subsec:videollama}, while integrating all three modalities, relies on a large language model backbone that makes it ill-suited for dense segment-level inference.
 
 ImageBind provides a unified embedding space trained around vision as the anchor modality, enabling alignment across six modalities without pairwise supervision. 
 For our use case — trimodal embedding extraction over two-second segments at the scale of a full video — this model offers the optimal trade-off between modality coverage, computational compactness, and a well-documented API.
-
 \subsection{Identified Limitations and Methodological Handling}
-
-
+\label{subsec:model_limitations}
 Two limitations of ImageBind inform the pipeline design. Its lack of temporal attention — time being encoded solely through 3D convolutional patches — reduces sensitivity to intra-segment dynamics. Silent segments further risk producing uninformative audio embeddings that distort the final score. 
 %Both are addressed in Chapter \ref{chap:implementation}: a context-specific modality imagination is adapted to fill out silent segments, the scoring function privileges inter-segment cosine variation over absolute energy levels, while a 1-unit stride compensates partially for the absence of temporal reasoning within segments which densifies the temporal analysis.
 The adressing of these limitations is detailed in Chapter \ref{chap:implementation}.
