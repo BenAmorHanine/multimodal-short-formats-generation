@@ -151,11 +151,13 @@ azerty
 \mainmatter
 \chapter{State of the Art}
 \label{ch:state_of_the_art}
-
 %models available and their key concepts
 %souel: el relevance of the 3 modalitites comment nahkiw aliha?
  % unnumbered - just contextual paragraph %hanine
   \section*{Introduction}
+Video understanding is an inherently multimodal problem. A highlight is rarely defined by a single signal — it emerges from the alignment, or sudden divergence,  of what is seen, heard, and spoken simultaneously. Building a system capable of detecting such moments therefore requires models that can reason jointly across modalities, not process them in isolation.
+This chapter traces the progression from unimodal approaches and their limitations, through fusion-based systems, to joint multimodal representation learning — the paradigm this work builds upon. Each step in this progression is motivated by the shortcomings of the one preceding it, converging on the architectural foundation of the proposed approach.
+
 \section{Unimodal Approaches for Video Understanding}%amira
 % Conceptual section: what is unimodal, why it's limited
 Video understanding has traditionally been approached through unimodal analysis, where only a single modality—visual, audio, or text—is processed independently. While such approaches can extract meaningful information, they often fail to capture the full semantic and emotional richness of long-form videos.
