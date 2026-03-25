@@ -223,17 +223,83 @@ Once transcribed, NLP techniques can be applied for:
 - Semantic similarity analysis
 
 Textual analysis enables identification of semantically important moments in videos. However, it ignores visual expressiveness, cinematic effects, and acoustic intensity, which are often crucial in determining whether a segment is engaging or impactful.
-\section{Representative Unimodal Models and Frameworks}
-\label{sec:unimodal_models_frameworks}
+\subsection{Representative Unimodal Models and Frameworks}
+\label{subsec:unimodal_models}
 
-\subsection{Whisper}     % ASR- we use this
-\label{subsec:whisper}
 
-\subsection{Librosa}     % Audio features - we use this
-\label{subsec:librosa}
+\subsubsection{Whisper}
+\label{subsubsec:whisper}
 
-\subsection{OpenCV / Decord}  % Video frame extraction - we use this
-\label{subsec:opencvg/decord}
+Whisper is an automatic speech recognition (ASR) system developed by OpenAI. It is trained on 680,000 hours of multilingual and multitask supervised data collected from the web, enabling robust transcription and translation capabilities across multiple languages.
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Multilingual speech recognition supporting 99 languages
+    \item Robust performance with various accents, background noise, and technical jargon
+    \item Capable of translation from non-English languages to English
+    \item Provides timestamped transcriptions suitable for subtitle generation
+\end{itemize}
+
+For short-form content generation, Whisper can automatically generate captions, subtitles, and transcripts from audio tracks, enabling better content accessibility and searchability.
+
+\subsubsection{Librosa}
+\label{subsubsec:librosa}
+
+Librosa is a Python library for music and audio analysis. It provides the building blocks necessary to extract audio features, analyze sound content, and process audio signals for machine learning applications.
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Audio feature extraction (MFCCs, chroma features, spectral contrast, zero-crossing rate)
+    \item Beat and tempo tracking for rhythm analysis
+    \item Onset detection for identifying note beginnings
+    \item Audio visualization tools (spectrograms, waveforms)
+    \item Support for various audio formats
+\end{itemize}
+
+In our project, Librosa enables audio preprocessing, feature extraction for content analysis, and rhythm-based editing for synchronizing visual cuts with music beats.
+
+\subsubsection{OpenCV and Decord}
+\label{subsubsec:opencv_decord}
+
+OpenCV (Open Source Computer Vision Library) and Decord are two essential frameworks for video processing and computer vision tasks.
+
+\paragraph{OpenCV}
+OpenCV is a comprehensive open-source computer vision and machine learning library with over 2,500 optimized algorithms.
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Video capture, processing, and writing
+    \item Image and video filtering, transformation, and enhancement
+    \item Feature detection and matching (SIFT, ORB, etc.)
+    \item Object detection and tracking
+    \item Real-time video analysis capabilities
+\end{itemize}
+
+\paragraph{Decord}
+Decord is an efficient video reader library designed for deep learning workflows. It provides fast, GPU-accelerated video decoding and random frame access.
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item High-performance video decoding
+    \item Random frame sampling without sequential decoding
+    \item GPU-accelerated processing
+    \item Seamless integration with PyTorch and other deep learning frameworks
+\end{itemize}
+
+For short-form content generation, OpenCV provides essential video processing capabilities for editing, filtering, and visual effect application, while Decord enables efficient video loading and frame extraction for model training and inference.
+
+\subsubsection{Synthesis for Short-Form Content Generation}
+\label{subsubsec:unimodal_synthesis}
+
+The unimodal frameworks presented above serve complementary roles in our automatic short-form content generation pipeline:
+
+\begin{itemize}
+    \item \textbf{Whisper} provides transcription and captioning capabilities for audio content
+    \item \textbf{Librosa} enables music analysis and beat-synchronized editing
+    \item \textbf{OpenCV} delivers comprehensive video processing and visual effect capabilities
+    \item \textbf{Decord} ensures efficient video loading and frame extraction for model training
+\end{itemize}
+
 
 \section{Limitations of Unimodal Approaches for Highlight detection}
 \label{sec:unimodal_limitations}
@@ -380,8 +446,44 @@ Addressing these challenges remains an active area of research, particularly for
 \label{sec:multimodal_models}
 %https://encord.com/blog/top-multimodal-models/
 
-\subsection{CLIP}%amira
+\subsection{CLIP: Contrastive Language-Image Pre-training}
 \label{subsec:clip}
+
+CLIP (Contrastive Language-Image Pre-training) is a neural network developed by OpenAI that learns visual concepts from natural language supervision. It enables zero-shot transfer to arbitrary visual classification tasks without requiring task-specific training data.
+
+\subsubsection{Core Concept}
+CLIP is trained on a large dataset of text-image pairs collected from the internet. The model learns a joint embedding space where matching images and text descriptions are positioned close together. This is achieved through a contrastive objective that maximizes similarity between correct pairs while minimizing it for incorrect pairs.
+
+\subsubsection{Architecture}
+CLIP consists of two encoders:
+\begin{itemize}
+    \item \textbf{Image Encoder:} A Vision Transformer (ViT) or ResNet that processes images.
+    \item \textbf{Text Encoder:} A Transformer that processes text snippets.
+\end{itemize}
+Both encoders project their inputs into a shared embedding space, enabling direct comparison between visual and textual content.
+
+\subsubsection{Key Capabilities}
+\begin{itemize}
+    \item \textbf{Zero-Shot Classification:} CLIP can perform new visual classification tasks by simply providing the names of the categories in natural language, without any additional training.
+    \item \textbf{Flexibility:} The model can handle diverse tasks including object recognition, action detection, geo-localization, and OCR.
+    \item \textbf{Robustness:} CLIP reduces the "robustness gap" by up to 75\% compared to traditional models trained directly on benchmarks.
+\end{itemize}
+
+\subsubsection{Relevance to Our Project}
+For automatic short-form content generation, CLIP enables:
+\begin{itemize}
+    \item Cross-modal search (finding videos or images using text descriptions)
+    \item Automatic content tagging and categorization
+    \item Quality assessment of generated content against textual descriptions
+    \item Complementary capabilities to ImageBind, focusing on vision-language alignment
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/clip.png}
+    \caption{CLIP architecture with dual encoders for images and text}
+    \label{fig:clip}
+\end{figure}
 \subsection{CLAP}
 \label{subsec:clap}
 Contrastive Language-Audio Pretraining (CLAP), as described in \citep{elizalde2022claplearningaudioconcepts}, is an extension of the contrastive learning paradigm of CLIP to the audio domain, with the aim of learning a joint representation space between audio and text to facilitate zero-shot audio classification and retrieval tasks. The architecture employs two encoders to process the audio and text modalities in the form of mel spectrogram and text, respectively, and is trained using symmetric contrastive loss to maximize the similarity between matching and minimize the similarity between non-matching audio and text pairs.
@@ -418,8 +520,109 @@ The model employs two branches: the Vision-Language branch that aggregates video
 However, the training of video language models like Video-LLaMA is computationally expensive and demands large-scale video-text paired datasets, which limits its adoption by many research groups. 
 
 VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA that uses a spatial-temporal convolution connector instead of the dual branches of the original model to link the vision and audio models to the language model and improves audio content processing using BEATs \citep{chen2022beatsaudiopretrainingacoustic}.
-\subsection{ImageBind}%amira   
-\label{subsec:imagebind}
+\subsection{ImageBind: A Foundational Model for Holistic Multimodal Integration}
+
+ImageBind, developed by Meta AI's FAIR Lab and open-sourced in May 2023, represents a paradigm shift in multimodal learning. It is the first AI model capable of binding information from six distinct modalities into a single, unified embedding space. For this project, which focuses on automatically generating high-impact short-form content (Shorts/Reels), ImageBind serves as a critical conceptual blueprint. It demonstrates how an AI system can move beyond processing disparate data streams to achieving a holistic understanding of content, mirroring the human ability to integrate sight, sound, and context simultaneously.
+
+\subsubsection{Core Concept: Joint Embedding Space}
+\label{subsubsec:joint_embedding_space}
+
+At its heart, ImageBind is built on the principle of creating a \textbf{joint embedding space}. This means that data from different modalities (e.g., a video clip, its background music, and a text caption) are mapped into a single, shared vector space. In this space, related concepts from different modalities are positioned close together. For a project like ours, this is a crucial capability, as it allows a system to directly compare, retrieve, and combine elements across audio, video, and text to generate a cohesive final product.
+\subsubsection{Modalities Integrated: A Sensory Spectrum for Content Creation}
+
+ImageBind is designed to handle six distinct data types, which encompass the core and emerging elements of modern short-form video content:
+
+\begin{itemize}
+    \item \textbf{Image/Video:} The primary visual content, capturing scenes, objects, and events.
+    \item \textbf{Audio:} Sound data, including background music, sound effects, and ambient noise, which is critical for setting the tone of a short format.
+    \item \textbf{Text:} Written content such as captions, on-screen text, or narrative descriptions that provide context and meaning.
+    \item \textbf{Depth (3D):} Information about spatial relationships between objects, enabling a more sophisticated understanding of scene composition for immersive effects.
+    \item \textbf{Thermal (heatmap):} Data capturing temperature variations, offering novel ways to segment or understand scenes.
+    \item \textbf{IMU (Inertial Measurement Units):} Sensor data recording motion and position, crucial for understanding camera movement and dynamics.
+\end{itemize}
+
+For our project, \textbf{image/video, audio, and text} are the primary modalities, but the inclusion of depth and IMU points toward future capabilities like understanding complex motion dynamics or creating 3D-consistent effects for reels.
+
+\subsubsection{Architecture Overview}
+\label{subsubsec:architecture_overview}
+
+While the full framework is not publicly released, the architecture described in Meta AI's research paper outlines a three-component system that provides a strong conceptual model for our work:
+
+\begin{itemize}
+    \item \textbf{Modality-Specific Encoders:} Separate encoders (e.g., Vision Transformer for images/video, Audio Spectrogram Transformer for audio) first convert raw data from each modality into a high-dimensional embedding vector. This process extracts the essential features from each input type.
+    
+    \item \textbf{Cross-Modal Attention Module:} This component is the intelligence behind the integration. It uses attention mechanisms to weigh the importance of different elements within each modality and then fuses them. For short-form generation, this would allow the system to focus on the most relevant visual element that matches a specific audio cue.
+    
+    \item \textbf{Joint Embedding Space:} The final component is the shared vector space where all modality embeddings are projected. This common space enables direct comparison and combination of concepts from different sources, which is the foundation for tasks like retrieving a video clip that matches an audio track or generating a caption that aligns with a scene.
+\end{itemize}
+
+\subsubsection{Training Methodology: The "Binding" Property of Images}
+\label{subsubsec:training_methodology}
+
+A key innovation of ImageBind is its efficient training approach. It leverages images as a "binding" modality. The model is trained using \textbf{image-paired data (image, X)}, where X can be any one of the other five modalities (text, audio, depth, IMU, or thermal). This means the model learns the relationships between, for example, an image and its corresponding sound, without needing every possible paired combination (e.g., text paired directly with audio). This approach is highly relevant, as it suggests a robust system can be built using widely available image-centric datasets, a principle that can be adapted to training a model for short-form content generation.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/training.png}
+    \caption{ImageBind: Holistic AI learning across six modalities }
+    \label{fig:nom_de_la_figure}
+\end{figure}
+
+\subsubsection{Key Capabilities and Performance Advantages}
+
+ImageBind is not merely a theoretical model; it demonstrates superior performance and unique emergent capabilities that are directly relevant to generating high-impact short formats.
+
+\begin{itemize}
+    \item \textbf{Outperforming Specialist Models:} ImageBind outperforms prior specialist models that were trained for a single modality. For example, in few-shot audio classification tasks (using only 1-4 examples), ImageBind achieved approximately \textbf{40\% higher top-1 accuracy} than self-supervised and even supervised AudioMAE models. Similarly, it outperformed MultiMAE on depth classification tasks. This suggests that a unified model can learn richer, more transferable features than siloed, task-specific models.
+    
+    \item \textbf{Emergent Zero-Shot Capabilities:} ImageBind exhibits new scaling behaviors—abilities that don't exist in smaller models but appear in larger versions. This includes:
+    \begin{itemize}
+        \item \textit{Cross-Modal Retrieval:} The ability to retrieve content across modalities that were never observed together. For instance, a user could search for a video clip using an audio description like "the sound of a bustling market" or find a text caption that matches a specific thermal image.
+        \item \textit{Compositional Semantics:} The joint embedding space allows for the addition of embeddings from different modalities to compose their semantics. For our project, this means we could combine the embedding of "a high-energy sports clip" (video) with the embedding of "triumphant orchestral music" (audio) to retrieve or generate a new, cohesive short format that embodies both concepts.
+    \end{itemize}
+    
+    \item \textbf{Audio-to-Image Generation:} By using its audio embeddings with a pre-trained DALLE-2 decoder (which typically works with CLIP text embeddings), ImageBind enables audio-to-image generation. This capability is a direct precursor to generating entire video sequences from audio prompts, a powerful tool for content creation.
+\end{itemize}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/capabilites.png}
+    \caption{ImageBind's joint embedding space enables novel multimodal capabilities}
+    \label{fig:capabilities}
+\end{figure}
+
+
+\subsubsection{Relevance to Automatic Short-Form Content Generation}
+
+ImageBind's capabilities directly address the core challenges and open new avenues for our project:
+
+\begin{itemize}
+    \item \textbf{Holistic Content Understanding:} For an automated system to generate high-impact reels, it must understand the relationship between a visual scene, its accompanying audio, and the text that narrates it. ImageBind provides the blueprint for a system that can analyze all these elements holistically, not as separate entities.
+    
+    \item \textbf{Enhanced Cross-Modal Search and Retrieval:} The joint embedding space allows for powerful cross-modal search. A creator (or an automated system) could build a reel by searching for a video clip using a text prompt like "a serene sunset," then find the perfect matching audio track by using the \textit{video clip itself} as the query. This streamlines the assembly process dramatically.
+    
+    \item \textbf{Generative Composition:} The ability to compose embeddings is perhaps the most exciting prospect. This project could leverage this to automatically generate novel short-form sequences. For example, by combining the embedding of a trending visual style with the embedding of a popular audio clip, the system could generate a new reel that is contextually and culturally relevant, maximizing its potential impact.
+    
+    \item \textbf{Scalability and Adaptability:} ImageBind's strong scaling behavior shows that as vision models improve (e.g., with models like Meta's DINOv2), the alignment and performance on non-vision tasks like audio classification also improve. This suggests a clear path for enhancing our project's capabilities over time by integrating more powerful foundational models.
+\end{itemize}
+
+\subsubsection{Limitations and Future Potential}
+\label{subsubsec:limitations_future}
+
+ImageBind's code and model weights are released under a \textbf{CC-BY-NC 4.0 license}, which restricts commercial use. Nevertheless, it serves as an exceptional proof-of-concept and blueprint for the field.
+
+The model is part of Meta's broader open-source AI ecosystem, which includes:
+\begin{itemize}
+    \item \textbf{DINOv2}: A method for training high-performance computer vision models without fine-tuning.
+    \item \textbf{Segment Anything (SAM)}: A universal segmentation model for isolating objects in images.
+\end{itemize}
+
+The success of ImageBind demonstrates the potential of multimodal learning for creative applications. It opens possibilities for developing systems that combine multiple modalities, such as creating immersive virtual worlds or enabling rich search across photos, videos, audio, and text.
+
+For our project, ImageBind provides a compelling vision of a future where AI can generate cohesive, high-impact short formats with holistic understanding.
+
 % Last = most important
 \section{Comparative Analysis and Discussion} %nermine
 \label{sec:comparative_analysis}
