@@ -269,7 +269,7 @@ Therefore, unimodal analysis fails to model cross-modal dependencies that define
 Joint multimodal representation learning addresses a fundamental limitation shared by both unimodal and fusion-based approaches: the absence of a unified semantic space in which modalities such as vision, audio, and text can be collectively  treated and compared. 
 Rather than processing each signal independently and combining outputs,the joint approach  trains a single model to vimap all modalities into a shared high-dimensional embedding space, where geometric proximity reflects semantic similarity regardless of the originating modality.
 \\Modern multimodal systems are inspired by the contrastive learning framework popularized by CLIP-like architectures, enabling cross-modal reasoning where heterogeneous modalities are treated as different expressions of the same underlying objective.
-Joint multimodal representation learning addresses the core challenge of cross-modal alignment, enabling direct comparison and retrieval across modalities without relying on engineered fusion rules or modality-specific supervision.
+%Joint multimodal representation learning addresses the core challenge of cross-modal alignment, enabling direct comparison and retrieval across modalities without relying on engineered fusion rules or modality-specific supervision.
 
 \begin{figure}[h!]
     \centering
@@ -464,7 +464,10 @@ Two limitations of ImageBind inform the pipeline design. Its lack of temporal at
 %Both are addressed in Chapter \ref{chap:implementation}: a context-specific modality imagination is adapted to fill out silent segments, the scoring function privileges inter-segment cosine variation over absolute energy levels, while a 1-unit stride compensates partially for the absence of temporal reasoning within segments which densifies the temporal analysis.
 The adressing of these limitations is detailed in Chapter \ref{chap:implementation}.
 
-\section*{Conclusion}%to be done
+\section*{Conclusion}%hanine
+%may be fixed when the section is done (if we added more content/analysis)
+This chapter has traced the evolution of multimodal learning from unimodal baselines to joint embedding spaces, establishing the theoretical foundation for the approach adopted in this work. The analysis converges on ImageBind as the model best suited to the constraints of trimodal highlight detection — not as an arbitrary choice, but as the natural endpoint of the progression surveyed. 
+The following chapter translates this grounding into a concrete pipeline design.
 
 \chapter{Design and Implementation}
 \label{chap:implementation}
