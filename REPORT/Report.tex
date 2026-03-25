@@ -422,54 +422,35 @@ VideoLLaMA 2 \citep{cheng2024videollama2} is an improved version of VideoLLaMA t
 % Justification of selected model family
 %+ Bridge to Chapter 2 (Methodology)
 
-The trajectory surveyed in this chapter points to a single conclusion: meaningful 
-cross-modal reasoning requires modalities to be aligned at training time, not 
-combined. The approach adopted in this work follows directly from 
-that constraint.
+The trajectory surveyed in this chapter points to a single conclusion: meaningful cross-modal reasoning requires modalities to be aligned at training time, not combined. The approach adopted in this work follows directly from that constraint.
 
 \subsection{Paradigm Justification}
 
-Unimodal approaches, while effective within their domain, fail to capture the semantic 
-richness of video, which is inherently multimodal. Fusion-based methods combine 
-representations learned independently, which limits their ability to model deep 
-cross-modal correspondences and to generalize to scenarios unseen during training.
+Unimodal approaches, while effective within their domain, fail to capture the semantic richness of video, which is inherently multimodal. 
+Fusion-based methods combine representations learned independently, which limits their ability to model deep cross-modal correspondences and to generalize to scenarios unseen during training.
 
-Joint multimodal representation learning is the paradigm that supports direct 
-trimodal comparison without modality-specific supervision. By projecting vision, audio, 
-and text into a shared embedding space through contrastive training, it becomes possible 
-to measure cosine similarity across heterogeneous modalities in a consistent manner. 
+Joint multimodal representation learning is the paradigm that supports direct trimodal comparison without modality-specific supervision. 
+By projecting vision, audio, and text into a shared embedding space through contrastive training, it becomes possible to measure cosine similarity across heterogeneous modalities in a consistent manner. 
 
 
 This mechanism is precisely what underpins the scoring strategy adopted in our pipeline: 
-\textbf{a segment is considered salient when it exhibits strong joint activity or a significant semantic shift across consecutive modalities.}
+\textbf{a segment is considered salient when it exhibits strong joint activity or a significant semantic shift across consecutive modalities}.
 
 \subsection{Model Justification}
 
-Among the joint embedding models surveyed, ImageBind \ref{subsec:imagebind} stands 
-out as the most suitable choice for the problem at hand. CLIP \ref{subsec:clip} is 
-limited to the image-text pair and has no audio processing capability. 
-CLAP \ref{subsec:clap} covers audio and text but disregards the visual modality. 
-Video-LLaMA \ref{subsec:videollama}, while integrating all three modalities, relies 
-on a large language model backbone that makes it ill-suited for dense segment-level 
-inference.
+Among the joint embedding models surveyed, ImageBind \ref{subsec:imagebind} stands out as the most suitable choice for the problem at hand. CLIP \ref{subsec:clip} is 
+limited to the image-text pair and has no audio processing capability. CLAP \ref{subsec:clap} covers audio and text but disregards the visual modality. 
+Video-LLaMA \ref{subsec:videollama}, while integrating all three modalities, relies on a large language model backbone that makes it ill-suited for dense segment-level inference.
 
-ImageBind provides a unified embedding space trained around vision as the anchor 
-modality, enabling alignment across six modalities without pairwise supervision. For 
-our use case — trimodal embedding extraction over two-second segments at the scale of 
-a full video — this model offers the optimal trade-off between modality coverage, 
-computational compactness, and a well-documented API.
+ImageBind provides a unified embedding space trained around vision as the anchor modality, enabling alignment across six modalities without pairwise supervision. 
+For our use case — trimodal embedding extraction over two-second segments at the scale of a full video — this model offers the optimal trade-off between modality coverage, computational compactness, and a well-documented API.
 
 \subsection{Identified Limitations and Methodological Handling}
 
 
-Two limitations of ImageBind inform the pipeline design. Its lack of temporal 
-attention — time being encoded solely through 3D convolutional patches — reduces 
-sensitivity to intra-segment dynamics. Silent segments further risk producing 
-uninformative audio embeddings that distort the final score. Both are addressed 
-in Chapter \ref{chap:implementation}: a context-specific modality imagination is adapted to fill out silent segments, the scoring function privileges inter-segment 
-cosine variation over absolute energy levels, while a 1-unit stride compensates 
-partially for the absence of temporal reasoning within segments which densifies the temporal analysis,
-
+Two limitations of ImageBind inform the pipeline design. Its lack of temporal attention — time being encoded solely through 3D convolutional patches — reduces sensitivity to intra-segment dynamics. Silent segments further risk producing uninformative audio embeddings that distort the final score. 
+%Both are addressed in Chapter \ref{chap:implementation}: a context-specific modality imagination is adapted to fill out silent segments, the scoring function privileges inter-segment cosine variation over absolute energy levels, while a 1-unit stride compensates partially for the absence of temporal reasoning within segments which densifies the temporal analysis.
+The adressing of these limitations is detailed in Chapter \ref{chap:implementation}.
 
 \section*{Conclusion}%to be done
 
