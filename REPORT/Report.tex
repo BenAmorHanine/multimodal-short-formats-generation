@@ -20,7 +20,10 @@
 \usepackage{float}
 \usepackage{svg}
 \usepackage{amsthm}
-
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{pifont}
+\usepackage{graphicx}
 
 %\usepackage{newtxtext}  % For text
 %\usepackage{newtxmath}  % For consistent math fonts
@@ -499,12 +502,11 @@ Flamingo represents a notable progression in vision-language modeling by enablin
 A core concept of its architecture is the fusion of large, pre-trained, and frozen models specifically a \textbf{vision encoder} and a \textbf{language model}—to leverage their existing knowledge without the need for intensive retraining . \\To efficiently bridge these two modalities, Flamingo introduces \textbf{the Perceiver Resampler}, which compresses a huge number of visual features into a fixed-size collection of visual tokens , these tokens then condition the frozen language model through \textbf{Gated Cross-Attention layers}, which are interleaved between the original language model layers , these gated layers are essential for preserving the stability of the model during training and ensuring the language model's original performance remains intact at initialization.
 
 A key contribution of Flamingo is its \textbf{few-shot learning} capability The model can adapt to various tasks with only a few input-output examples .
-Experimental evaluations showed strong performance across several vision–language benchmarks,  such as multimodal reasoning tasks, visual question answering and image captioning .
+Experimental evaluations showed strong performance across several vision–language benchmarks,  such as multimodal reasoning tasks, visual question answering and image captioning \citep{alayrac2022flamingo}.
 
 
 \subsection{LLAVA}%nermine
-\label{subsec:llava}
-LLaVA  is a multimodal model designed to enhance general-purpose visual and language understanding through the use of visual instruction tuning 
+LLaVA  is a multimodal model designed to enhance general-purpose visual and language understanding through the use of visual instruction tuning \citep{liu2024llava}.
 
 The architecture of LLaVA  consists of a \textbf{pretrained CLIP  vision encoder }and a \textbf{Vicuna large language model}, which are connected by a two-layer \textbf{Multi-Layer Perceptron cross-modal projector} .\\
 This MLP projector converts visual encoder tokens into post-embedding layer LLM tokens, replacing the simpler linear projection used in earlier versions to improve multimodal capabilities .\\
@@ -624,8 +626,121 @@ The success of ImageBind demonstrates the potential of multimodal learning for c
 For our project, ImageBind provides a compelling vision of a future where AI can generate cohesive, high-impact short formats with holistic understanding.
 
 % Last = most important
-\section{Comparative Analysis and Discussion} %nermine
-\label{sec:comparative_analysis}
+
+\section{Comparative Analysis and Discussion}%nermine
+The evolution of video understanding systems reflects a progressive transition from unimodal processing to fully integrated multimodal paradigms.  Early approaches relied on unimodal models such as CNNs and LSTMs, where each modality—vision, audio, or text—was analyzed independently. Despite their computing efficiency, these systems were inherently limited in capturing the full semantic richness of video content, effectively operating as "siloed" experts, since significant events often emerge from the interaction of modalities rather than isolated signals\citep{baltruvsaitis2019multimodal}.
+
+To overcome these limitations, fusion-based approaches were introduced, combining modalities either at the feature level (early fusion) or at 
+the decision level (late fusion) by concatenating features or scores from independent encoders .While this enabled the processing of multi-sensory inputs,  it introduced a critical limitation on the quality of alignment : shallow integration often failed to capture deep semantic correlations, leaving the encoders effectively independent 
+and unable to model the rich cross-modal relationships that give video content its meaning \citep{liu2024multimodalfusion}.
+
+The current joint embedding paradigm, exemplified by CLIP and ImageBind, resolved this by mapping heterogeneous modalities into a single vector space, gaining unprecedented zero-shot flexibility
+and enabling cross-modal retrieval without task-specific training.
+
+However, this progress introduces a new tension: while models like ImageBind extend coverage to up to six modalities, they rely on a central visual backbone to bind other sensors, which can produce alignment errors in unseen combinations.
+Furthermore, embedding-based approaches such as CLIP are still limited to static representations, lacking explicit temporal modeling which makes it difficult to capture long-range dependencies in video content . Modern LLM-based approaches like Video-LLaMA further expand modality coverage to 3+ inputs but introduce a trade-off in computational weight, as their generative expressiveness requires significantly more parameters and slower inference than their embedding-only predecessors.
+
+\vspace{0.5cm}
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|c|c|c|c|p{4cm}|}
+\hline
+\textbf{Model} & \textbf{Paradigm} & \textbf{Mod.} & \textbf{Zero-shot} & \textbf{Temp.} & \textbf{Scale} & \textbf{Limitation} \\
+\hline
+
+CNN/LSTM 
+& Unimodal 
+& 1 
+& \ding{55} 
+& Limited 
+& Low 
+& No cross-modal interaction  \\
+\hline
+
+Early/Late Fusion 
+& Fusion 
+& 2 (V+A) 
+& \ding{55} 
+& Varies 
+& Medium 
+& Independent encoders; weak alignment \\
+\hline
+
+CLIP 
+& Joint 
+& 2 
+& \checkmark 
+& \ding{55} 
+& Large 
+& Static image-text only \\
+\hline
+
+CLAP 
+& Joint 
+& 2 
+& \checkmark 
+& \ding{55} 
+& Medium 
+& No vision alignment  \\
+\hline
+
+Flamingo 
+& Joint (LLM) 
+& 2 
+& Few-shot
+& Partial 
+& Very Large 
+& High computational cost  \\
+\hline
+
+LLaVA 
+& Joint (LLM) 
+& 2 
+& \checkmark 
+& \ding{55} 
+& Large 
+& Static images only  \\
+\hline
+
+Video-LLaMA 
+& Joint (Video-LLM) 
+& 3+ 
+& \checkmark 
+& \checkmark 
+& Very Large 
+& Heavy; slow inference \\
+\hline
+
+ImageBind 
+& Joint 
+& 6 
+& \checkmark 
+& \ding{55} 
+& Large 
+& No temporal attention  \\
+\hline
+
+\end{tabular}%
+}
+
+\caption{Comparative analysis of representative models and paradigms for multimodal video understanding.}
+\label{tab:comparison}
+
+\end{table}
+
+
+
+\vspace{0.5cm}
+
+From this comparison, it is clear that unimodal and fusion-based systems are insufficient for capturing the complexity of long-form video content, especially when it comes to highlight detection tasks. While joint multimodal models offer a unified semantic representation with strong zero-shot capabilities,  they nevertheless have difficulty modeling temporal dynamics, which are crucial for comprehending video narrative structure and event progression.
+
+Among the reviewed methods, embedding-based models such as ImageBind offer strong cross-modal alignment and scalability, making them particularly suitable for retrieval and similarity-based tasks. In contrast, generative models such as Video-LLaMA excel at reasoning over temporal sequences but require significantly more computational resources.
+
+In general, the choice of paradigm depends on the target application: unimodal or fusion techniques may be preferred by lightweight systems, while high-level semantic understanding and cross-modal reasoning benefit from joint multimodal architectures. Despite its present limitations, joint multimodal representation learning offers the best foundation for video highlight identification, where semantic, emotional, and temporal information must be merged.
 
 %comparison of the approaches pros and cons
 % + Table comparing all models across key criteria ( inspire from the one in the paper of encord)
