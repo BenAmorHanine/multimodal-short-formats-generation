@@ -86,4 +86,30 @@ Hang Zhang, Xin Li, and Lidong Bing.
   video understanding.
 \newblock \emph{arXiv preprint arXiv:2306.02858}, 2023.
 
+\bibitem[Alayrac et~al.(2022)Alayrac, Donahue, Luc, Miech, Barr, Hasson, Lenc,
+  Mensch, Millican, Reynolds, Ring, Rutherford, Cabi, van~den Driessche, Lockhart,
+  Borgeaud, Elsen, Koppula, Joulin, et al.]{alayrac2022flamingo}
+Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr,
+  Yana Hasson, Adrien Lenc, Arthur Mensch, Katie Millican, Malcolm Reynolds,
+  et~al.
+\newblock Flamingo: a visual language model for few-shot learning, 2022.
+\newblock URL \url{https://storage.googleapis.com/deepmind-media/DeepMind.com/Blog/tackling-multiple-tasks-with-a-single-visual-language-model/flamingo.pdf}.
+
+\bibitem[Liu et~al.(2024)Liu, Li, Li, and others]{liu2024llava}
+Haotian Liu, Chunyuan Li, Yuheng Li, and others.
+\newblock Improved baselines with visual instruction tuning, 2024.
+\newblock URL \url{https://arxiv.org/pdf/2405.17247}.
+
+\bibitem[Baltrušaitis et~al.(2019)Baltrušaitis, Ahuja, and Morency]{baltruvsaitis2019multimodal}
+Tadas Baltrušaitis, Chaitanya Ahuja, and Louis-Philippe Morency.
+\newblock Multimodal machine learning: A survey and taxonomy, 2019.
+\newblock URL \url{https://arxiv.org/pdf/1911.03977}.
+
+\bibitem[Liu et~al.(2024)Liu, et al.]{liu2024multimodalfusion}
+Author Liu et~al.
+\newblock Multimodal fusion in deep learning: A comprehensive review, 2024.
+\newblock URL \url{https://arxiv.org/pdf/2407.12438}.
+
 \end{thebibliography}
+
+
