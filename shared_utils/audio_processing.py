@@ -35,21 +35,26 @@ def extract_audio_from_video(video_path, sr=16000):
 def extract_audio_segment(video_path, start_time, end_time, sr=16000):
     """
     Extract audio segment.
-    
+ 
     Used by:
     - ImageBind per-segment extraction
     - CLAP per-segment extraction
     - Audio feature analysis
     """
     audio_file = extract_audio_from_video(video_path, sr)
-    
-    audio, _ = librosa.load(
-        audio_file,
-        sr=sr,
-        offset=start_time,
-        duration=end_time - start_time
-    )
-    
+ 
+    #Compute sample-accurate start/end indices explicitly instead of passing float offset/duration directly to librosa.load: converts offset→samples internally with float arithmetic,which causes ±1 sample jitter between calls on the same timestamp.
+    # Loading the full file once and slicing by integer sample inde is fully deterministic.
+    audio_full, _ = librosa.load(audio_file, sr=sr)
+ 
+    start_sample = round(start_time * sr)
+    end_sample = round(end_time * sr)
+ 
+    # Clamp to actual audio length to avoid out-of-bounds on last segment
+    end_sample = min(end_sample, len(audio_full))
+ 
+    audio = audio_full[start_sample:end_sample]
+ 
     return audio
 
 

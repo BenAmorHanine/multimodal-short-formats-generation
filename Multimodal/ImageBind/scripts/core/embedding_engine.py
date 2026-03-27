@@ -12,7 +12,7 @@ from imagebind import data
 from imagebind.models.imagebind_model import ModalityType
 
 # Import from shared utils
-from shared_utils.video_processing import segment_video, save_video_segment
+from shared_utils.video_processing import compute_segments, save_video_segment
 #from shared_utils.audio_processing import extract_audio_segment
 from shared_utils.text_processing import (
     extract_transcript_with_timestamps,
@@ -134,7 +134,7 @@ class EmbeddingEngine:
         if verbose:
             print(f"\nStep 2: Segmenting video (window={window_size}s, stride={stride}s)...")
         
-        segments, _, _ = segment_video(video_path, window_size, stride)
+        segments, _, _ = compute_segments(video_path, window_size, stride)
 
         if verbose:
             print(f"✓ Created {len(segments)} segments")
@@ -146,6 +146,9 @@ class EmbeddingEngine:
         segment_tuples = [(None, start, end) for start, end in segments]
         segment_texts = align_text_to_segments(transcript_segments, segment_tuples)
         
+        assert len(segment_texts) == len(segments), (
+            f"Text/vision segment mismatch: {len(segment_texts)} vs {len(segments)}"
+        )
         text_count = sum(1 for t in segment_texts if t)
         if verbose:
             print(f"✓ {text_count}/{len(segment_texts)} segments have text")

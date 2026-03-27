@@ -18,6 +18,7 @@ def extract_transcript_with_timestamps(video_path, whisper_model):
     result = whisper_model.transcribe(
         video_path,
         word_timestamps=True,
+        temperature=0.0,
         verbose=False
     )
     
