@@ -143,12 +143,23 @@
 \listoftables
 \newpage
 \spacing{1.4}
-\chapter*{List of acronyms}
+\chapter*{List of Acronyms}
 %\addcontentsline{toc}{chapter}{Liste des acronymes}
 \markboth{List of acronyms}{}
 \begin{itemize}
 \item \textbf{Abbrev.} Abbreviation
 \end{itemize}
+
+\chapter*{List of Symbols}
+\markboth{List of Symbols}{}
+\begin{tabular}{ll}
+$T$   & Number of frames per segment \\
+$C$   & Number of colour channels    \\
+$H, W$ & Spatial dimensions of each frame (px) \\
+$\mathbf{v}_i, \mathbf{a}_i, \mathbf{t}_i$ & Vision, audio, and text embeddings for segment $i$ \\
+$N$   & Total number of video segments \\
+\end{tabular}
+
 
 \mainmatter
 %\mtcaddchapter[Introduction g�n�rale] 
@@ -890,11 +901,31 @@ model = ib_model.imagebind_huge(pretrained=True)
 model.eval().to(device)
 \end{lstlisting}
 
+\subsection{Feature Extraction Pipeline}
+\label{subsec:feature_extraction}
 
+\textbf{Vision}: Frames are extracted at the video's native frame rate (24 fps, yielding ~48 frames per 2-second segment) using \texttt{decord}'s \texttt{VideoReader} with a fixed stride of 1, ensuring full temporal coverage without skipping frames. 
+
+Each frame is resized to $224\times224$ via center-crop, normalized using texttt{ImageNet} statistics ($\mu = [0.485, 0.456, 0.406]$, $\sigma = [0.229, 0.224, 0.225]$), and stacked into a tensor of shape $(T \times C \times H \times W)$  
+%\footnote{ $T$: number of frames per segment; $C$: number of colour channels (3 for RGB); $H, W$: spatial height and width of each frame (224 px each).}
+before being passed through the vision encoder to produce frame-level embeddings $\mathbf{v}_i \in \mathbb{R}^{1024}$.
+
+
+\textbf{Audio}: Audio tracks are demuxed from the video container via FFmpeg and resampled to 16\,kHz mono to match ImageBind's expected input format.
+Each 2-second clip is time-aligned with its corresponding video segment using a shared duration reference computed once via \texttt{ffprobe}, eliminating cross-modality boundary drift.
+Clips are converted to 128-bin log-mel spectrograms with a hop length of 10\,ms and encoded to produce segment-level embeddings $\mathbf{a}_i \in \mathbb{R}^{1024}$.
+
+
+\textbf{Text}: Whisper-large-v3 transcribes the full audio stream with word-level timestamps, after which transcriptions are mapped to their corresponding segments by timestamp intersection.
+
+Transcriptions are tokenized via the CLIP tokenizer with a maximum context of 77 tokens; segments exceeding this limit are truncated at the token boundary. The token sequence is encoded to produce $\mathbf{t}_i \in \mathbb{R}^{1024}$.
+
+Silent or non-speech segments initially receive zero-valued embeddings $\mathbf{t}_i = \mathbf{0}$, which are subsequently replaced by the text imagination module( Section~\ref{sec:text_imagination}).
 
 
 
 \section{Missing Modality Handling: Text Imagination}% amira and hanine
+\label{sec:text_imagination}
 \section{Highlight Scoring and Selection}%will be fixed when done
 %and Temporal Modeling
 \section{Evaluation Metrics and Validation Protocol} %will be fixed when done
