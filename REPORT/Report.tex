@@ -26,6 +26,14 @@
 \usepackage{pifont}
 \usepackage{graphicx}
 
+\usepackage{listings} %code insertion
+\usepackage{xcolor} %code colors
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single
+} %code style
+
 %\usepackage{newtxtext}  % For text
 %\usepackage{newtxmath}  % For consistent math fonts
 \newtheorem{theorem}{Theorem}
@@ -832,7 +840,27 @@ The following chapter translates this grounding into a concrete pipeline design.
 \subsection{Modality Synchronization and Alignment}%hanine
 
 
-\section{ImageBind Integration}%hanine and amira
+\section{ImageBind Integration}
+\label{sec:imagebind_integration}
+ImageBind \citep{girdhar2023imagebindembeddingspacebind} serves as the core multimodal embedding model, extracting unified 1024-dimensional representations from vision, audio, and text modalities into a shared embedding space where cosine similarity measures semantic relatedness across modalities.
+
+\subsection{Model Configuration}
+\label{subsec:imagebind_config}
+
+The ImageBind-Huge model is loaded from pretrained weights and deployed in inference mode with frozen parameters. The model employs three modality-specific encoders: a Vision Transforme (ViT-H/14) for frames at 224x224 resolution, a spectrogram encoder for 2-second audio clips converted to 128-bin mel-spectrograms, and a transformer-based text encoder using the CLI tokenizer. All encoders project inputs into the shared 1024-dimensional space via $\ell_2$ normalization and learned temperature scaling.
+
+\lstset{language=Python, caption={ImageBind initialization}}
+\begin{lstlisting}
+import imagebind.models.imagebind_model as ib_model
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = ib_model.imagebind_huge(pretrained=True)
+model.eval().to(device)
+\end{lstlisting}
+
+
+
+
+
 \section{Missing Modality Handling: Text Imagination}% amira and hanine
 \section{Highlight Scoring and Selection}%will be fixed when done
 %and Temporal Modeling
