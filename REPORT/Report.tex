@@ -869,7 +869,8 @@ Transcriptions include precise temoral annotations, enabling alignment with vide
 \\This synchronized trimodal (vision, audio, and text) data is fundamental for deeper semantic analysis and multimodal learning frameworks such as ImageBind  ensuring consistency across all modalities.
 
 \subsection{Modality Synchronization and Alignment}%hanine
-
+Temporal consistency across modalities is enforced by computing a single canonical set of segment boundaries once via \texttt{compute\_segments}, using \texttt{ffprobe}-derived duration with fixed-precision rounding, and sharing it across all three extraction pipelines. This eliminates floating-point drift that would arise from independent per-modality boundary computation.
+\\Given boundaries $[t_{\text{start}},\, t_{\text{end}}]$, each modality maps them to its native domain: frame indices via $\lfloor t \cdot \text{fps} \rceil$ for vision, sample indices via $\lfloor t \cdot f_s \rceil$ for audio, and timestamp intersection for text. This guarantees that $\mathbf{v}_i$, $\mathbf{a}_i$, and $\mathbf{t}_i$ are temporally co-referential for every segment $i$.
 
 \section{ImageBind Integration}
 \label{sec:imagebind_integration}
