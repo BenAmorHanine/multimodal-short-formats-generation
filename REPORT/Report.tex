@@ -845,13 +845,12 @@ The following chapter translates this grounding into a concrete pipeline design.
 
 \subsection{Video Segmentation} %nermine
 
-Video segmentation is a fundamental process within the preprocessing pipeline, as it transforms a continuous video stream into a sequence of smaller, temporally localized units that can be independently analyzed. Instead of processing the entire video , which would hide specific temporal variations, the proposed approach divides the input video into overlapping temporal segments using a sliding window mechanism.
+Video segmentation transforms continuous video into smaller temporal units, enabling granular analysis and improved capture of transient events.
+\\The pipeline uses a sliding window mechanism to create overlapping segments rather than processing the entire video.
+Specifically, a window of two seconds with a one-second stride produces segments such as . In multimodal analysis, where information may cross segment boundaries, this overlap enables the system to record seamless transitions and maintain contextual continuity.
 
-More specifically, the segmentation process is implemented through a fixed window size of two seconds combined with a stride of one second. This design results in overlapping segments (e.g., [0\_2], [1\_3], [2\_4]), allowing the system to capture transitions and contextual continuity between adjacent segments. Such overlap is particularly important in multimodal analysis, where relevant information may cross temporal boundaries.
+The \texttt{compute\_segments} function uses \texttt{ffprobe} for metadata extraction and applying fixed-precision rounding, to ensure consistent and synchronized segment boundaries, preventing floating-point drift, which could cause misalignment between modalities over long videos.
 
-At the core of this segmentation strategy lies the \texttt{compute\_segments} function, which is designed to act as the single source of truth for defining segment boundaries to ensure consistency and reproducibility across different modalities. This function extracts video metadata such as duration and frame rate using \texttt{ffprobe}, rather than relying on approximate values from video readers. Furthermore, temporal boundaries are rounded to a fixed precision to avoid floating-point drift, which could otherwise accumulate over long videos and lead to misalignment between modalities.
-
-The output of this stage is a sequence of temporal intervals, each defined by a start and end timestamp. These intervals are subsequently used as a common reference for extracting visual, audio, and textual information, ensuring that all modalities remain perfectly synchronized throughout the pipeline.
 \subsection{Frame Extraction}%nermine
 
 Frame extraction is responsible for converting each temporal video segment into a set of representative visual samples. Each segment must be discretized into a set number of frames because deep learning models like ImageBind work with static images rather than continuous video streams.
@@ -918,7 +917,11 @@ Clips are converted to 128-bin log-mel spectrograms with a hop length of 10\,ms 
 Transcriptions are tokenized via the CLIP tokenizer with a maximum context of 77 tokens; segments exceeding this limit are truncated at the token boundary. The token sequence is encoded to produce $\mathbf{t}_i \in \mathbb{R}^{1024}$.
 \\Silent or non-speech segments initially receive zero-valued embeddings $\mathbf{t}_i = \mathbf{0}$, which are subsequently replaced by the text imagination module( Section~\ref{sec:text_imagination}).
 
+\subsection{Temporal Aggregation}
+\label{subsec:temporal_aggregation}
 
+\subsection{Embedding Storage}
+\label{subsec:embedding_storage}
 
 \section{Missing Modality Handling: Text Imagination}% amira and hanine
 \label{sec:text_imagination}
