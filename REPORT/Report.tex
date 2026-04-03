@@ -852,34 +852,22 @@ Specifically, a window of two seconds with a one-second stride produces segments
 The \texttt{compute\_segments} function uses \texttt{ffprobe} for metadata extraction and applying fixed-precision rounding, to ensure consistent and synchronized segment boundaries, preventing floating-point drift, which could cause misalignment between modalities over long videos.
 
 \subsection{Frame Extraction}%nermine
+Frame extraction converts each video segment into representative visual samples, then frames are extracted using the \texttt{decord} library,for efficient video reading.
+For each segment, a predetermined number of frames (typically eight) are uniformly sampled between the start and end timestamps. This uniform sampling ensures comprehensive visual representation across the entire segment.
+Frame indices are calculated by rounding timestamp-to-frame conversions, to maintain temporal accuracy and consistency. The selected frames are then retrieved in batch form and transformed into NumPy arrays, making them compatible with downstream processing.
+\\This approach balances computational efficiency and representational quality by restricting frames per segment while retaining sufficient visual information for multimodal analysis.
 
-Frame extraction is responsible for converting each temporal video segment into a set of representative visual samples. Each segment must be discretized into a set number of frames because deep learning models like ImageBind work with static images rather than continuous video streams.
-
-Frames are extracted using the \texttt{decord} library, which provides efficient and scalable video reading capabilities. For each segment, a predetermined number of frames (typically eight) are uniformly sampled between the start and end timestamps. This uniform sampling technique guarantees that the extracted frames capture the visual content of the entire segment instead of focusing on a single moment.
-
-To maintain temporal accuracy, frame indices are calculated using rounded timestamp-to-frame conversions, thereby avoiding inconsistencies caused by floating-point approximations. The selected frames are then retrieved in batch form and transformed into NumPy arrays, making them directly compatible with downstream processing and embedding models.
-
-This approach achieves a balance between computational efficiency and representational richness. By restricting the number of frames per segment, the system reduces processing time and memory consumption, while still maintaining sufficient visual information to describe the segment. As a result, each video segment is transformed into a condensed, informative visual representation suitable for multimodal embedding.
 \subsection{Audio Extraction}%nermine
+Audio extraction aims to isolate and structure the acoustic component of each video segment. \texttt{ffmpeg} extracts the full audio track, standardized to 16 kHz and mono.
+\\The \texttt{librosa} library loads the audio, and segment boundaries signal are converted to sample indices by multiplying with the sampling rate and rounding.This ensures consistent 2-second segments (32,000 samples) and eliminates floating-point inconsistencies.
+\\Each audio segment is thus obtained by slicing the full waveform between two integer indices corresponding to the segment's temporal boundaries. This ensures that all extracted segments have consistent durations (e.g., 2 seconds corresponding to 32,000 samples), which is crucial for stable feature extraction and model input.
+\\Low-level audio features(zero-crossing rate, spectral centroid, RMS energy) are also computed, enhancing multimodal integration.
 
-Audio extraction aims to isolate the acoustic component of each video segment and convert it into a structured representation that can be analyzed. The entire audio track is first extracted from the video using \texttt{ffmpeg}, ensuring a consistent sampling rate of 16 kHz and a single audio channel. This standardization facilitates compatibility with both speech recognition and audio embedding models.
-
-The suggested method takes a more accurate and deterministic approach instead of directly extracting audio segments using floating-point timestamps. Using the \texttt{librosa} library, the complete audio signal is first loaded into memory. Then, segment boundaries are explicitly multiplied by the sampling rate and rounded to create sample indices.  This strategy eliminates potential inconsistencies caused by floating-point arithmetic, which can lead to slight variations in segment lengths across repeated executions.
-
-Each audio segment is thus obtained by slicing the full waveform between two integer indices corresponding to the segment’s temporal boundaries. This ensures that all extracted segments have consistent durations (e.g., 2 seconds corresponding to 32,000 samples), which is crucial for stable feature extraction and model input.
-
-The pipeline facilitates the computation of low-level audio features like zero-crossing rate, spectral centroid, and root mean square (RMS) energy in addition to raw audio extraction. These features can be applied to downstream tasks like audio-based scoring or highlight detection. 
-
-Overall, the audio extraction procedure offers a solid and repeatable basis for incorporating acoustic data into the multimodal representation.
 \subsection{Text Extraction via Speech Recognition}%nermine
+Text extraction uses automatic speech recognition (ASR), specifically the robust Whisper model, to transcibe spoken content.
+Transcriptions include precise temoral annotations, enabling alignment with video segments.An alignment procedure concatenates text fragments from the transcription segments that temporally overlap with each video segment, creating a coherent textual representation.
+\\This synchronized trimodal (vision, audio, and text) data is fundamental for deeper semantic analysis and multimodal learning frameworks such as ImageBind  ensuring consistency across all modalities.
 
-Text extraction is performed using automatic speech recognition (ASR) to convert spoken content from the video into textual form. The Whisper model is used due to its robustness and capacity to produce precise temporal annotations and accurate transcriptions.
-
-The transcription process produces a sequence of text segments, each associated with a start and end timestamp. These timestamps enable the alignment of textual information with the previously defined video segments. This technique maintains temporal structure, which is crucial for multimodal synchronization, unlike naive transcription techniques that handle the video as a single text block.
-
-To associate text with each video segment, an alignment procedure is applied. The system identifies all transcription segments that temporally overlap with each video segment. The corresponding text fragments are then concatenated to form a single textual representation for that segment. If no speech is detected within a segment, an empty string is assigned, reflecting the absence of textual information.
-
-This alignment phase is crucial in order to create a coherent trimodal representation (vision, audio, and text). It ensures that each segment is enhanced with synchronized semantic information derived from speech, enabling more meaningful downstream analysis. Furthermore, the use of timestamp-based alignment guarantees consistency across modalities, which is a key requirement for multimodal learning frameworks such as ImageBind.
 \subsection{Modality Synchronization and Alignment}%hanine
 
 
