@@ -907,9 +907,52 @@ Transcriptions are tokenized via the CLIP tokenizer with a maximum context of 77
 
 \subsection{Temporal Aggregation}
 \label{subsec:temporal_aggregation}
+ImageBind processes frames independently, producing one embedding per frame
+rather than per segment. To obtain a single segment-level vision representation,
+mean pooling is applied across the $T$ frame embeddings within each segment:
 
+\begin{equation}
+\mathbf{v}_{\text{seg}} = \frac{1}{T} \sum_{j=1}^{T} \mathbf{v}_j
+\end{equation}
+
+The result is re-normalized to preserve unit norm and maintain consistency
+with ImageBind's $\ell_2$-normalized embedding geometry:
+
+\begin{equation}
+\mathbf{v}_{\text{seg}}^{\text{norm}} = 
+\frac{\mathbf{v}_{\text{seg}}}{\|\mathbf{v}_{\text{seg}}\|_2}
+\end{equation}
+
+Audio and text encoders produce segment-level embeddings directly and require
+no further aggregation. Mean pooling was retained over attention-based
+alternatives for its determinism and computational simplicity.
 \subsection{Embedding Storage}
 \label{subsec:embedding_storage}
+er-video embeddings are persisted to compressed NumPy archives
+(\texttt{.npz}), one file per video, containing the three modality matrices
+and associated metadata:
+
+\begin{lstlisting}[language=Python, caption={Embedding storage schema}]
+{
+  'vision':         np.float32,  # (N, 1024)
+  'audio':          np.float32,  # (N, 1024)
+  'text':           np.float32,  # (N, 1024)
+  'timestamps':     np.float32,  # (N, 2)  [start, end] in sec
+  'modality_valid': {            # validity flags per-segment
+      'vision': bool[],
+      'audio':  bool[],
+      'text':   bool[]
+  }
+}
+\end{lstlisting}
+The \texttt{modality\_valid} flags record whether each modality produced
+a meaningful embedding for a given segment. A text flag of \texttt{False}
+indicates a silent or non-speech segment whose embedding is temporarily
+set to the zero vector $\mathbf{t}_i = \mathbf{0}$, pending replacement
+by the text imagination module (Section~\ref{sec:text_imagination}),
+after which ImageBind re-encodes the imputed text to produce a valid
+$\mathbf{t}_i \in \mathbb{R}^{1024}$.
+
 
 \section{Missing Modality Handling: Text Imagination}% amira and hanine
 \label{sec:text_imagination}
