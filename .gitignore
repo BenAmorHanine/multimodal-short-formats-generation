@@ -40,3 +40,5 @@ results/
 
 # Dataset 
 data/
+
+VASTannotations150k.json
