@@ -51,7 +51,7 @@ def _compute_pairwise_coherence(
         va = (V[idx] * A[idx]).sum()
         vt = (V[idx] * T[idx]).sum() * w
         at = (A[idx] * T[idx]).sum() * w
-        return (va + vt + at) / (1.0 + w + w + 1e-8)
+        return (va + vt + at) / (1.0 + 2.0 * w + 1e-8)
 
     for i in range(N - 1):
         j = i + 1

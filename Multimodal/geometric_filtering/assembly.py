@@ -51,7 +51,8 @@ def _extract_clip(
 ) -> None:
     """Extract, crop-to-portrait, rescale and re-encode a single clip."""
     dur = end_s - start_s
-    vf = f"crop=ih*{width}/{height}:ih,scale={width}:{height}:flags=lanczos,fps={fps}"
+    aspect = width / height
+    vf = f"crop=ih*{aspect}:ih,scale={width}:{height}:flags=lanczos,fps={fps}"
     cmd = [
         "ffmpeg", "-y",
         "-ss", str(start_s),
@@ -75,7 +76,11 @@ def _add_caption(
     height: int,
 ) -> None:
     """Burn a caption subtitle into the bottom of a clip."""
-    safe = caption.replace("'", "").replace(":", " ").replace("%", "pct")[:80]
+    # Strip characters that are problematic for ffmpeg's drawtext filter
+    # (backslashes, quotes, colons, percent signs, newlines).
+    for ch in ("\\", "'", '"', ":", "%", "\n", "\r"):
+        caption = caption.replace(ch, " ")
+    safe = caption[:80].strip()
     fs = max(24, width // 32)
     mg = height // 20
     vf = (
