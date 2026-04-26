@@ -1,6 +1,7 @@
-import gradio as gr
 import os
 import subprocess
+
+import gradio as gr
 
 def creative_ai_clipper(video_path, user_prompt, num_shorts, duration):
     if video_path is None or not user_prompt:
@@ -26,19 +27,19 @@ def creative_ai_clipper(video_path, user_prompt, num_shorts, duration):
 
 def launch_interface():
     with gr.Blocks(theme=gr.themes.Soft(primary_hue="orange", secondary_hue="gray")) as demo:
-        gr.HTML('<div style="text-align: center; padding: 20px; background-color: #2d2d2d; border-radius: 10px; margin-bottom: 20px;"><h1 style="color: #ff9800; margin-bottom: 0;">SMART SHORT GENERATOR</h1><p style="color: white;">Propulse par VideoLLaMA 2</p></div>')
+        gr.HTML('<div style="text-align: center; padding: 20px; background-color: #2d2d2d; border-radius: 10px; margin-bottom: 20px;"><h1 style="color: #ff9800; margin-bottom: 0;">SMART SHORT GENERATOR</h1><p style="color: white;">Multimodal short-format workflow</p></div>')
 
         with gr.Row():
             with gr.Column(scale=1):
                 gr.Markdown("### 1. Video Source")
                 video_input = gr.Video(label=None)
                 with gr.Group():
-                    gr.Markdown("### Parametres")
-                    duration_slider = gr.Slider(minimum=4, maximum=15, step=2, value=6, label="Duree (sec)")
-                    count_slider = gr.Slider(minimum=1, maximum=5, step=1, value=3, label="Nombre de clips")
+                    gr.Markdown("### Parameters")
+                    duration_slider = gr.Slider(minimum=4, maximum=15, step=2, value=6, label="Duration (sec)")
+                    count_slider = gr.Slider(minimum=1, maximum=5, step=1, value=3, label="Number of clips")
 
             with gr.Column(scale=2):
-                gr.Markdown("### Resultats extraits")
+                gr.Markdown("### Extracted Results")
                 outputs = [gr.Video(label=f"Top {i+1}", interactive=False) for i in range(5)]
                 with gr.Row():
                     outputs[0]
@@ -50,9 +51,9 @@ def launch_interface():
 
         with gr.Row(variant="panel"):
             with gr.Column(scale=4):
-                user_instruction = gr.Textbox(label="Que voulez-vous extraire ?", placeholder="Ex: Action, sourires...", lines=1)
+                user_instruction = gr.Textbox(label="What do you want to extract?", placeholder="Ex: action, smiles...", lines=1)
             with gr.Column(scale=1):
-                generate_btn = gr.Button("GENERER", variant="primary", size="lg")
+                generate_btn = gr.Button("GENERATE", variant="primary", size="lg")
 
         generate_btn.click(
             fn=creative_ai_clipper,
