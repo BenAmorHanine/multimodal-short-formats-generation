@@ -20,13 +20,16 @@ Public API
 Returns
 -------
 results : list[dict]  ranked highlights, each dict contains:
-              rank, seg_idx, times [start_s, end_s], text,
+              rank, window_idx, seg_idx, member_seg_idx,
+              times [start_s, end_s], text,
               geo_score, coherence, novelty, saliency
 scores  : dict
-              'geo_score'   torch.Tensor [N]
-              'coherence_n' torch.Tensor [N]
-              'novelty_n'   torch.Tensor [N]
-              'saliency_n'  torch.Tensor [N]
+              'geo_score'         torch.Tensor [N]     segment-level attributed
+              'coherence_n'       torch.Tensor [N]
+              'novelty_n'         torch.Tensor [N]
+              'saliency_n'        torch.Tensor [N]
+              'geo_score_windows' torch.Tensor [M]     window-level
+              'window_times'      np.ndarray   [M, 2]
 """
 
 import numpy as np
@@ -64,6 +67,32 @@ def _temporal_nms(geo_score: torch.Tensor,
     return selected
 
 
+def _minmax_normalize(x: torch.Tensor) -> torch.Tensor:
+    """Scale tensor to [0, 1]."""
+    return (x - x.min()) / (x.max() - x.min() + 1e-8)
+
+
+def _build_window_metadata(times: np.ndarray,
+                           texts: np.ndarray,
+                           window_size: int) -> tuple[np.ndarray, list[str], list[list[int]]]:
+    """Build window spans/texts/member indices for each sliding window position."""
+    N = len(times)
+    M = N - window_size + 1
+
+    window_times = np.array([
+        [times[w][0], times[w + window_size - 1][1]]
+        for w in range(M)
+    ])
+
+    window_members = [list(range(w, w + window_size)) for w in range(M)]
+    window_texts = [
+        " | ".join(str(texts[idx]) for idx in members)
+        for members in window_members
+    ]
+
+    return window_times, window_texts, window_members
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Public entry point
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +105,7 @@ def get_highlights_by_window(
     trust:          torch.Tensor,
     times:          np.ndarray,     # [N, 2]  segment start/end in seconds
     texts:          np.ndarray,     # [N]     transcript per segment
-    window_size:    int   = 3,      # any integer >= 1 and <= N
+    window_size:    int   = 2,      # any integer >= 1 and <= N
     context_window: int   = 5,
     top_k:          int   = 10,
     min_gap_s:      float = 2.0,
@@ -85,7 +114,7 @@ def get_highlights_by_window(
     w_saliency:     float = 0.2,
 ) -> tuple[list[dict], dict]:
     """
-    Compute geometric scores then return the top-K highlights.
+    Compute geometric scores then return the top-K window highlights.
 
     Parameters
     ----------
@@ -100,7 +129,7 @@ def get_highlights_by_window(
 
     Returns
     -------
-    results : list[dict] sorted by rank
+    results : list[dict] sorted by rank (window-level)
     scores  : dict of score tensors keyed by signal name
     """
     geo_score, components = compute_geometric_scores(
@@ -116,19 +145,35 @@ def get_highlights_by_window(
     novelty_n   = components["novelty_n"]
     saliency_n  = components["saliency_n"]
 
-    selected_idx = _temporal_nms(geo_score, times, top_k, min_gap_s)
+    # Build window-level scores for selection/NMS to respect window_size spans.
+    raw_coh = components["raw_coherence"]
+    raw_nov = components["raw_novelty"]
+    raw_sal = components["raw_saliency"]
+
+    coh_w = _minmax_normalize(raw_coh)
+    nov_w = _minmax_normalize(raw_nov)
+    sal_w = _minmax_normalize(raw_sal)
+    geo_score_windows = w_coherence * coh_w + w_novelty * nov_w + w_saliency * sal_w
+
+    window_times, window_texts, window_members = _build_window_metadata(times, texts, window_size)
+    selected_idx = _temporal_nms(geo_score_windows, window_times, top_k, min_gap_s)
 
     results = []
-    for rank, seg_idx in enumerate(selected_idx, start=1):
+    for rank, win_idx in enumerate(selected_idx, start=1):
+        members = window_members[win_idx]
+        # For compatibility, keep seg_idx as the center member of the winning window.
+        seg_idx = members[len(members) // 2]
         results.append({
             "rank":      rank,
+            "window_idx": win_idx,
             "seg_idx":   seg_idx,
-            "times":     times[seg_idx].tolist(),   # [start_s, end_s]
-            "text":      str(texts[seg_idx]),
-            "geo_score": geo_score[seg_idx].item(),
-            "coherence": coherence_n[seg_idx].item(),
-            "novelty":   novelty_n[seg_idx].item(),
-            "saliency":  saliency_n[seg_idx].item(),
+            "member_seg_idx": members,
+            "times":     window_times[win_idx].tolist(),
+            "text":      window_texts[win_idx],
+            "geo_score": geo_score_windows[win_idx].item(),
+            "coherence": coh_w[win_idx].item(),
+            "novelty":   nov_w[win_idx].item(),
+            "saliency":  sal_w[win_idx].item(),
         })
 
     scores = {
@@ -136,6 +181,11 @@ def get_highlights_by_window(
         "coherence_n": coherence_n,
         "novelty_n":   novelty_n,
         "saliency_n":  saliency_n,
+        "geo_score_windows": geo_score_windows,
+        "coherence_windows": coh_w,
+        "novelty_windows": nov_w,
+        "saliency_windows": sal_w,
+        "window_times": window_times,
     }
 
     return results, scores

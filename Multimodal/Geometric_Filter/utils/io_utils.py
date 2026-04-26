@@ -95,10 +95,16 @@ def save_top_segments(
     suffix = {1: "single", 2: "pairwise", 3: "triplet"}.get(window_size, f"w{window_size}")
     path   = os.path.join(output_dir, f"{video_stem}_top{top_n}_{suffix}.npz")
 
+    seg_idx_arr = np.array([r.get("seg_idx", -1) for r in results])
+    window_idx_arr = np.array([r.get("window_idx", -1) for r in results])
+    member_seg_idx_arr = np.array([r.get("member_seg_idx", []) for r in results], dtype=object)
+
     np.savez(
         path,
         rank        = np.array([r["rank"]      for r in results]),
-        seg_idx     = np.array([r["seg_idx"]   for r in results]),
+        seg_idx     = seg_idx_arr,
+        window_idx  = window_idx_arr,
+        member_seg_idx = member_seg_idx_arr,
         geo_score   = np.array([r["geo_score"] for r in results]),
         coherence   = np.array([r["coherence"] for r in results]),
         novelty     = np.array([r["novelty"]   for r in results]),
@@ -145,9 +151,14 @@ def load_top_segments(path: str) -> list[dict]:
     n       = len(data["rank"])
     results = []
     for i in range(n):
+        has_window_idx = "window_idx" in data.files
+        has_members = "member_seg_idx" in data.files
+
         results.append({
             "rank":      int(data["rank"][i]),
             "seg_idx":   int(data["seg_idx"][i]),
+            "window_idx": int(data["window_idx"][i]) if has_window_idx else -1,
+            "member_seg_idx": data["member_seg_idx"][i].tolist() if has_members else [],
             "times":     data["times"][i].tolist(),
             "text":      str(data["raw_text"][i]),
             "geo_score": float(data["geo_score"][i]),

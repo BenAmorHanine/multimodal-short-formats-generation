@@ -22,6 +22,7 @@ Typical usage
 
 from .scoring import compute_geometric_scores
 from .filtering import get_highlights_by_window
+from .reranker import rerank_filtered_highlights
 from .utils import (
     save_geo_scores,
     save_top_segments,
@@ -32,6 +33,7 @@ from .utils import (
 __all__ = [
     "compute_geometric_scores",
     "get_highlights_by_window",
+    "rerank_filtered_highlights",
     "save_geo_scores",
     "save_top_segments",
     "load_geo_scores",
